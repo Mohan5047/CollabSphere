@@ -13,6 +13,7 @@ const courseRoutes = require("./routes/courseRoutes"); // Import course routes
 const learningTrackRoutes = require("./routes/learningTracksRoutes"); // Import learning tracks routes
 const moduleRoutes = require("./routes/moduleRoutes"); // Import module routes
 const lessonRoutes = require("./routes/lessonRoutes"); // Import lesson routes
+const lessonResourceRoutes = require("./routes/lessonResourceRoutes"); // Import lesson resource routes
 
 pool
   .query("SELECT NOW()")
@@ -37,6 +38,7 @@ app.use("/api/learning-tracks", learningTrackRoutes); // Use the imported learni
 app.use("/api/courses", require("./routes/courseRoutes")); // Use the course routes
 app.use("/api/modules", require("./routes/moduleRoutes")); // Use the module routes
 app.use("/api/lessons", lessonRoutes); // Use the imported lesson routes
+app.use("/api/lesson-resources", require("./routes/lessonResourceRoutes")); // Use the lesson resource routes
 app.get("/", (req, res) => {
     res.send("🚀 CollabSphere Backend Running Successfully");
 });
