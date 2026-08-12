@@ -14,7 +14,12 @@ const learningTrackRoutes = require("./routes/learningTracksRoutes"); // Import 
 const moduleRoutes = require("./routes/moduleRoutes"); // Import module routes
 const lessonRoutes = require("./routes/lessonRoutes"); // Import lesson routes
 const lessonResourceRoutes = require("./routes/lessonResourceRoutes"); // Import lesson resource routes
-
+const progressRoutes = require("./routes/progressRoutes");
+const { getAllLessons, getLessonById } = require("./controllers/lessonController");
+const courseProgressRoutes = require("./routes/courseProgressRoutes");
+const { getCourseProgress } = require("./controllers/courseProgressController");
+const enrollmentRoutes = require("./routes/enrollmentRoutes");
+const { getAllEnrollments, getEnrollmentById } = require("./controllers/enrollmentController");
 pool
   .query("SELECT NOW()")
   .then((result) => {
@@ -39,6 +44,11 @@ app.use("/api/courses", require("./routes/courseRoutes")); // Use the course rou
 app.use("/api/modules", require("./routes/moduleRoutes")); // Use the module routes
 app.use("/api/lessons", lessonRoutes); // Use the imported lesson routes
 app.use("/api/lesson-resources", require("./routes/lessonResourceRoutes")); // Use the lesson resource routes
+app.get("/api/lessons", getAllLessons); // GET all lessons
+app.get("/api/lessons/:id", getLessonById); // GET lesson by ID
+app.use("/api/progress", progressRoutes);
+app.use("/api/course-progress", courseProgressRoutes);
+app.use("/api/enrollments", enrollmentRoutes);
 app.get("/", (req, res) => {
     res.send("🚀 CollabSphere Backend Running Successfully");
 });

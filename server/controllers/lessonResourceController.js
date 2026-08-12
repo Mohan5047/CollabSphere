@@ -1,4 +1,4 @@
-const pool = require("../config/db");
+ const pool = require("../config/db");
 
 // GET all resources
 const getAllResources = async (req, res) => {
@@ -13,8 +13,7 @@ const getAllResources = async (req, res) => {
                 lr.created_at,
                 l.title AS lesson_title
             FROM lesson_resources lr
-            JOIN lessons l
-                ON lr.lesson_id = l.id
+            JOIN lessons l ON lr.lesson_id = l.id
             ORDER BY lr.lesson_id, lr.id
         `);
 
@@ -25,11 +24,11 @@ const getAllResources = async (req, res) => {
         });
 
     } catch (err) {
-        console.error(err);
+        console.error("GET RESOURCES ERROR:", err);
 
         res.status(500).json({
             success: false,
-            message: "Internal Server Error"
+            message: err.message
         });
     }
 };
@@ -50,8 +49,7 @@ const getResourceById = async (req, res) => {
                 lr.created_at,
                 l.title AS lesson_title
             FROM lesson_resources lr
-            JOIN lessons l
-                ON lr.lesson_id = l.id
+            JOIN lessons l ON lr.lesson_id = l.id
             WHERE lr.id = $1
         `, [id]);
 
@@ -68,11 +66,11 @@ const getResourceById = async (req, res) => {
         });
 
     } catch (err) {
-        console.error(err);
+        console.error("GET RESOURCE ERROR:", err);
 
         res.status(500).json({
             success: false,
-            message: "Internal Server Error"
+            message: err.message
         });
     }
 };
@@ -103,11 +101,11 @@ const getResourcesByLesson = async (req, res) => {
         });
 
     } catch (err) {
-        console.error(err);
+        console.error("GET LESSON RESOURCES ERROR:", err);
 
         res.status(500).json({
             success: false,
-            message: "Internal Server Error"
+            message: err.message
         });
     }
 };
@@ -116,6 +114,9 @@ const getResourcesByLesson = async (req, res) => {
 // ADD resource
 const addResource = async (req, res) => {
     try {
+        console.log("🔥 ADD RESOURCE API CALLED");
+        console.log("BODY:", req.body);
+
         const {
             lesson_id,
             resource_type,
@@ -130,7 +131,6 @@ const addResource = async (req, res) => {
             });
         }
 
-        // Check lesson exists
         const lesson = await pool.query(
             "SELECT id FROM lessons WHERE id = $1",
             [lesson_id]
@@ -168,11 +168,11 @@ const addResource = async (req, res) => {
         });
 
     } catch (err) {
-        console.error(err);
+        console.error("ADD RESOURCE ERROR:", err);
 
         res.status(500).json({
             success: false,
-            message: "Internal Server Error"
+            message: err.message
         });
     }
 };
@@ -240,11 +240,11 @@ const updateResource = async (req, res) => {
         });
 
     } catch (err) {
-        console.error(err);
+        console.error("UPDATE RESOURCE ERROR:", err);
 
         res.status(500).json({
             success: false,
-            message: "Internal Server Error"
+            message: err.message
         });
     }
 };
@@ -275,11 +275,11 @@ const deleteResource = async (req, res) => {
         });
 
     } catch (err) {
-        console.error(err);
+        console.error("DELETE RESOURCE ERROR:", err);
 
         res.status(500).json({
             success: false,
-            message: "Internal Server Error"
+            message: err.message
         });
     }
 };
