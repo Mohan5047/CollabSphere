@@ -20,6 +20,10 @@ const courseProgressRoutes = require("./routes/courseProgressRoutes");
 const { getCourseProgress } = require("./controllers/courseProgressController");
 const enrollmentRoutes = require("./routes/enrollmentRoutes");
 const { getAllEnrollments, getEnrollmentById } = require("./controllers/enrollmentController");
+const quizRoutes = require("./routes/quizRoutes");
+const quizQuestionRoutes = require("./routes/quizQuestionRoutes");
+const quizAttemptRoutes = require("./routes/quizAttemptRoutes");
+const certificateRoutes = require("./routes/certificateRoutes");
 pool
   .query("SELECT NOW()")
   .then((result) => {
@@ -49,6 +53,10 @@ app.get("/api/lessons/:id", getLessonById); // GET lesson by ID
 app.use("/api/progress", progressRoutes);
 app.use("/api/course-progress", courseProgressRoutes);
 app.use("/api/enrollments", enrollmentRoutes);
+app.use("/api/quizzes", quizRoutes);
+app.use("/api/quiz-questions", quizQuestionRoutes);
+app.use("/api/quiz-attempts", quizAttemptRoutes);
+app.use("/api/certificates", certificateRoutes);
 app.get("/", (req, res) => {
     res.send("🚀 CollabSphere Backend Running Successfully");
 });
