@@ -1,189 +1,271 @@
-const pool = require("../config/db");
+ const pool = require("../config/db");
 
-// =========================
-// Create Team Controller
-// =========================
-const createTeamController = async (req, res) => {
+// ==========================================
+// CREATE TEAM
+// ==========================================
+
+const createTeam = async (req, res) => {
     try {
-
-        // Get data from request body
         const { project_id, team_name } = req.body;
 
-        // Validation
         if (!project_id || !team_name) {
             return res.status(400).json({
                 success: false,
-                message: "Project ID and Team Name are required"
+                message: "project_id and team_name are required"
             });
         }
 
-        // Check if project exists
-        const project = await pool.query(
-            "SELECT * FROM projects WHERE id = $1",
-            [project_id]
-        );
-
-        if (project.rows.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "Project not found"
-            });
-        }
-
-        // Check if logged-in user owns the project
-        if (project.rows[0].owner_id !== req.user.id) {
-            return res.status(403).json({
-                success: false,
-                message: "You are not authorized to create a team for this project"
-            });
-        }
-
-        // Create Team
-        const team = await pool.query(
-            `INSERT INTO teams (project_id, team_name)
-             VALUES ($1, $2)
-             RETURNING *`,
+        const result = await pool.query(
+            `INSERT INTO teams
+            (project_id, team_name)
+            VALUES ($1, $2)
+            RETURNING *`,
             [project_id, team_name]
         );
 
         res.status(201).json({
             success: true,
-            message: "Team Created Successfully",
-            team: team.rows[0]
+            message: "Team created successfully",
+            data: result.rows[0]
         });
 
     } catch (error) {
-
-        console.log(error);
+        console.error("CREATE TEAM ERROR:", error);
 
         res.status(500).json({
             success: false,
-            message: "Server Error"
+            message: error.message
         });
-
     }
 };
-// =========================
-// Add Team Member Controller
-// =========================
-const addTeamMemberController = async (req, res) => {
+
+
+// ==========================================
+// GET ALL TEAMS
+// ==========================================
+
+const getAllTeams = async (req, res) => {
     try {
+        const result = await pool.query(`
+            SELECT
+                t.id,
+                t.project_id,
+                t.team_name,
+                t.created_at,
+                COUNT(tm.id) AS member_count
+            FROM teams t
+            LEFT JOIN team_members tm
+                ON t.id = tm.team_id
+            GROUP BY
+                t.id,
+                t.project_id,
+                t.team_name,
+                t.created_at
+            ORDER BY t.created_at DESC
+        `);
 
-        const { team_id, user_id } = req.body;
+        res.status(200).json({
+            success: true,
+            count: result.rows.length,
+            data: result.rows
+        });
 
-        // Validation
-        if (!team_id || !user_id) {
-            return res.status(400).json({
-                success: false,
-                message: "Team ID and User ID are required"
-            });
-        }
+    } catch (error) {
+        console.error("GET TEAMS ERROR:", error);
 
-        // Check if team exists
-        const team = await pool.query(
-            "SELECT * FROM teams WHERE id = $1",
-            [team_id]
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+
+// ==========================================
+// GET TEAM BY ID
+// ==========================================
+
+const getTeamById = async (req, res) => {
+    try {
+        const { teamId } = req.params;
+
+        const teamResult = await pool.query(
+            `SELECT *
+             FROM teams
+             WHERE id = $1`,
+            [teamId]
         );
 
-        if (team.rows.length === 0) {
+        if (teamResult.rows.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: "Team not found"
             });
         }
 
-        // Check if user exists
-        const user = await pool.query(
-            "SELECT * FROM users WHERE id = $1",
+        const membersResult = await pool.query(`
+            SELECT
+                tm.id AS member_id,
+                tm.user_id,
+                u.full_name,
+                u.email,
+                tm.joined_at
+            FROM team_members tm
+            JOIN users u
+                ON tm.user_id = u.id
+            WHERE tm.team_id = $1
+            ORDER BY tm.joined_at ASC
+        `, [teamId]);
+
+        res.status(200).json({
+            success: true,
+            data: {
+                team: teamResult.rows[0],
+                members: membersResult.rows
+            }
+        });
+
+    } catch (error) {
+        console.error("GET TEAM ERROR:", error);
+
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+
+// ==========================================
+// ADD MEMBER TO TEAM
+// ==========================================
+
+const addTeamMember = async (req, res) => {
+    try {
+        const { team_id, user_id } = req.body;
+
+        if (!team_id || !user_id) {
+            return res.status(400).json({
+                success: false,
+                message: "team_id and user_id are required"
+            });
+        }
+
+        // Check team
+        const teamResult = await pool.query(
+            `SELECT id
+             FROM teams
+             WHERE id = $1`,
+            [team_id]
+        );
+
+        if (teamResult.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Team not found"
+            });
+        }
+
+        // Check user
+        const userResult = await pool.query(
+            `SELECT id, full_name, email
+             FROM users
+             WHERE id = $1`,
             [user_id]
         );
 
-        if (user.rows.length === 0) {
+        if (userResult.rows.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: "User not found"
             });
         }
 
-        // Check if member already exists
+        // Check duplicate membership
         const existingMember = await pool.query(
-            `SELECT * FROM team_members
-             WHERE team_id = $1 AND user_id = $2`,
+            `SELECT id
+             FROM team_members
+             WHERE team_id = $1
+             AND user_id = $2`,
             [team_id, user_id]
         );
 
         if (existingMember.rows.length > 0) {
-            return res.status(400).json({
+            return res.status(409).json({
                 success: false,
-                message: "User is already a team member"
+                message: "User is already a member of this team"
             });
         }
 
-        // Add member
-        const member = await pool.query(
-            `INSERT INTO team_members (team_id, user_id)
-             VALUES ($1, $2)
-             RETURNING *`,
+        const result = await pool.query(
+            `INSERT INTO team_members
+            (team_id, user_id)
+            VALUES ($1, $2)
+            RETURNING *`,
             [team_id, user_id]
         );
 
         res.status(201).json({
             success: true,
-            message: "Team Member Added Successfully",
-            member: member.rows[0]
+            message: "Member added successfully",
+            data: result.rows[0]
         });
 
     } catch (error) {
-
-        console.log(error);
+        console.error("ADD TEAM MEMBER ERROR:", error);
 
         res.status(500).json({
             success: false,
-            message: "Server Error"
+            message: error.message
         });
-
     }
 };
-// =========================
-// Get Team Members Controller
-// =========================
-const getTeamMembersController = async (req, res) => {
+
+
+// ==========================================
+// REMOVE MEMBER FROM TEAM
+// ==========================================
+
+const removeTeamMember = async (req, res) => {
     try {
+        const { teamId, userId } = req.params;
 
-        const { teamId } = req.params;
-
-        const members = await pool.query(
-            `SELECT
-                users.id,
-                users.full_name,
-                users.email,
-                users.role
-             FROM team_members
-             INNER JOIN users
-             ON team_members.user_id = users.id
-             WHERE team_members.team_id = $1`,
-            [teamId]
+        const result = await pool.query(
+            `DELETE FROM team_members
+             WHERE team_id = $1
+             AND user_id = $2
+             RETURNING *`,
+            [teamId, userId]
         );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Team member not found"
+            });
+        }
 
         res.status(200).json({
             success: true,
-            totalMembers: members.rows.length,
-            members: members.rows
+            message: "Member removed successfully",
+            data: result.rows[0]
         });
 
     } catch (error) {
-
-        console.log(error);
+        console.error("REMOVE TEAM MEMBER ERROR:", error);
 
         res.status(500).json({
             success: false,
-            message: "Server Error"
+            message: error.message
         });
-
     }
 };
+
+
 module.exports = {
-    createTeamController,
-    addTeamMemberController,
-    getTeamMembersController
+    createTeam,
+    getAllTeams,
+    getTeamById,
+    addTeamMember,
+    removeTeamMember
 };

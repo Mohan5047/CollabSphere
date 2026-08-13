@@ -24,6 +24,7 @@ const quizRoutes = require("./routes/quizRoutes");
 const quizQuestionRoutes = require("./routes/quizQuestionRoutes");
 const quizAttemptRoutes = require("./routes/quizAttemptRoutes");
 const certificateRoutes = require("./routes/certificateRoutes");
+
 pool
   .query("SELECT NOW()")
   .then((result) => {
