@@ -79,7 +79,64 @@ const getAllTeams = async (req, res) => {
         });
     }
 };
+// ==========================================
+// ASSIGN TEAM LEAD
+// ==========================================
 
+const assignTeamLead = async (req, res) => {
+    try {
+        const { teamId, userId } = req.params;
+
+        // Check whether the user is already a team member
+        const memberResult = await pool.query(
+            `SELECT *
+             FROM team_members
+             WHERE team_id = $1
+             AND user_id = $2`,
+            [teamId, userId]
+        );
+
+        if (memberResult.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "User is not a member of this team"
+            });
+        }
+
+        // Remove existing team lead
+        await pool.query(
+            `UPDATE team_members
+             SET role = 'member'
+             WHERE team_id = $1
+             AND role = 'team_lead'`,
+            [teamId]
+        );
+
+        // Assign new team lead
+        const result = await pool.query(
+            `UPDATE team_members
+             SET role = 'team_lead'
+             WHERE team_id = $1
+             AND user_id = $2
+             RETURNING *`,
+            [teamId, userId]
+        );
+
+        res.status(200).json({
+            success: true,
+            message: "Team lead assigned successfully",
+            data: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error("ASSIGN TEAM LEAD ERROR:", error);
+
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
 
 // ==========================================
 // GET TEAM BY ID
@@ -105,11 +162,12 @@ const getTeamById = async (req, res) => {
 
         const membersResult = await pool.query(`
             SELECT
-                tm.id AS member_id,
-                tm.user_id,
-                u.full_name,
-                u.email,
-                tm.joined_at
+    tm.id AS member_id,
+    tm.user_id,
+    u.full_name,
+    u.email,
+    tm.role,
+    tm.joined_at
             FROM team_members tm
             JOIN users u
                 ON tm.user_id = u.id
@@ -267,5 +325,6 @@ module.exports = {
     getAllTeams,
     getTeamById,
     addTeamMember,
-    removeTeamMember
+    removeTeamMember,
+    assignTeamLead
 };

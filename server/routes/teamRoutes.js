@@ -7,9 +7,9 @@ const {
     getAllTeams,
     getTeamById,
     addTeamMember,
-    removeTeamMember
+    removeTeamMember,
+    assignTeamLead
 } = require("../controllers/teamController");
-
 
 // Create team
 router.post("/", createTeam);
@@ -29,7 +29,10 @@ router.delete(
     removeTeamMember
 );
 
-
+router.put(
+    "/:teamId/lead/:userId",
+    assignTeamLead
+);
 // Get team with members
 router.get("/:teamId", getTeamById);
 

@@ -24,6 +24,9 @@ const quizRoutes = require("./routes/quizRoutes");
 const quizQuestionRoutes = require("./routes/quizQuestionRoutes");
 const quizAttemptRoutes = require("./routes/quizAttemptRoutes");
 const certificateRoutes = require("./routes/certificateRoutes");
+const taskRoutes = require("./routes/taskRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
+
 
 pool
   .query("SELECT NOW()")
@@ -58,6 +61,8 @@ app.use("/api/quizzes", quizRoutes);
 app.use("/api/quiz-questions", quizQuestionRoutes);
 app.use("/api/quiz-attempts", quizAttemptRoutes);
 app.use("/api/certificates", certificateRoutes);
+app.use("/api/tasks", taskRoutes);
+app.use("/api/notifications", notificationRoutes);
 app.get("/", (req, res) => {
     res.send("🚀 CollabSphere Backend Running Successfully");
 });
