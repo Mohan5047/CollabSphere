@@ -204,41 +204,69 @@ app.get("/", (req, res) => {
 // ==========================================
 // SOCKET.IO LOGIC
 // ==========================================
-
+const onlineUsers = new Set();
+const socketUsers = new Map();
 io.on("connection", (socket) => {
 
-    console.log(
-        "🟢 User connected:",
-        socket.id
-    );
-socket.on("join_user", (userId) => {
-    socket.join(`user_${userId}`);
+    console.log("🟢 User connected:", socket.id);
 
-    socket.userId = userId;
-
-    console.log(`👤 User ${userId} joined room user_${userId}`);
-
-    // Tell everyone that this user is online
-    io.emit("user_online", Number(userId));
-});
-    // -------------------------------
+    // ==========================================
     // JOIN USER ROOM
-    // -------------------------------
-socket.on("disconnect", () => {
-    console.log("🔴 User disconnected:", socket.id);
+    // ==========================================
 
-    if (socket.userId) {
-        io.emit("user_offline", Number(socket.userId));
-    }
-});
+    socket.on("join_user", (userId) => {
 
-    // -------------------------------
+        console.log("🔥 JOIN_USER EVENT RECEIVED");
+        console.log("👤 User ID received:", userId);
+
+        // Join personal room
+        socket.join(`user_${userId}`);
+
+        // Store which user belongs to this socket
+        socketUsers.set(socket.id, userId);
+
+        // Add user to online users
+        onlineUsers.add(Number(userId));
+
+        console.log(
+            `👤 User ${userId} joined room user_${userId}`
+        );
+
+        console.log(
+            "👥 Online users:",
+            [...onlineUsers]
+        );
+
+        // Send online users to everyone
+        io.emit(
+            "online_users",
+            [...onlineUsers]
+        );
+
+        // Show sockets in this room
+        const room = io.sockets.adapter.rooms.get(
+            `user_${userId}`
+        );
+
+        console.log(
+            `👥 Sockets in user_${userId}:`,
+            room ? [...room] : []
+        );
+    });
+
+
+    // ==========================================
     // SEND MESSAGE
-    // -------------------------------
+    // ==========================================
 
     socket.on("send_message", async (data) => {
-console.log("📨 Message received from frontend:", data);
+
         try {
+
+            console.log(
+                "📨 Message received from frontend:",
+                data
+            );
 
             const {
                 sender_id,
@@ -246,52 +274,72 @@ console.log("📨 Message received from frontend:", data);
                 message
             } = data;
 
-            // Validate
+            // Validate data
             if (
                 !sender_id ||
                 !receiver_id ||
-                !message ||
-                !message.trim()
+                !message
             ) {
+
+                console.log(
+                    "❌ Invalid message data"
+                );
+
                 return;
             }
 
-            // Save message
+
+            // ==========================================
+            // SAVE MESSAGE TO DATABASE
+            // ==========================================
+
             const result = await pool.query(
-                `
-                INSERT INTO messages
-                (
-                    sender_id,
-                    receiver_id,
-                    message
-                )
-                VALUES
-                ($1, $2, $3)
-                RETURNING *
-                `,
+                `INSERT INTO messages
+                (sender_id, receiver_id, message)
+                VALUES ($1, $2, $3)
+                RETURNING *`,
                 [
                     sender_id,
                     receiver_id,
-                    message.trim()
+                    message
                 ]
             );
 
-            const savedMessage =
-                result.rows[0];
+            const savedMessage = result.rows[0];
 
-            // Send to receiver
-            io.to(`user_${receiver_id}`)
-                .emit(
-                    "receive_message",
-                    savedMessage
-                );
+            console.log(
+                "💾 Message saved:",
+                savedMessage
+            );
 
-            // Send back to sender
-            io.to(`user_${sender_id}`)
-                .emit(
-                    "message_sent",
-                    savedMessage
-                );
+
+            // ==========================================
+            // SEND TO RECEIVER
+            // ==========================================
+
+            io.to(
+                `user_${receiver_id}`
+            ).emit(
+                "receive_message",
+                savedMessage
+            );
+
+
+            // ==========================================
+            // SEND BACK TO SENDER
+            // ==========================================
+
+            io.to(
+                `user_${sender_id}`
+            ).emit(
+                "message_sent",
+                savedMessage
+            );
+
+
+            console.log(
+                `📤 Message sent from User ${sender_id} to User ${receiver_id}`
+            );
 
         } catch (error) {
 
@@ -299,15 +347,13 @@ console.log("📨 Message received from frontend:", data);
                 "❌ SOCKET MESSAGE ERROR:",
                 error
             );
-
         }
-
     });
 
 
-    // -------------------------------
+    // ==========================================
     // DISCONNECT
-    // -------------------------------
+    // ==========================================
 
     socket.on("disconnect", () => {
 
@@ -316,10 +362,55 @@ console.log("📨 Message received from frontend:", data);
             socket.id
         );
 
+        const userId =
+            socketUsers.get(socket.id);
+
+        if (userId) {
+
+            socketUsers.delete(socket.id);
+
+            // Check whether this user has another
+            // connected socket/browser
+            let stillConnected = false;
+
+            for (
+                const connectedUserId
+                of socketUsers.values()
+            ) {
+
+                if (
+                    Number(connectedUserId) ===
+                    Number(userId)
+                ) {
+
+                    stillConnected = true;
+                    break;
+                }
+            }
+
+            // Only mark offline if no other
+            // socket belongs to this user
+            if (!stillConnected) {
+
+                onlineUsers.delete(
+                    Number(userId)
+                );
+            }
+
+            console.log(
+                "👥 Online users:",
+                [...onlineUsers]
+            );
+
+            // Update everyone
+            io.emit(
+                "online_users",
+                [...onlineUsers]
+            );
+        }
     });
 
 });
-
 // ==========================================
 // DATABASE CONNECTION TEST
 // ==========================================

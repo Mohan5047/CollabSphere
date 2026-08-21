@@ -1,528 +1,540 @@
-  import { useEffect, useState } from "react";
+ import { useEffect, useState } from "react";
 import socket from "./socket";
 
 interface Message {
-    id: number;
-    sender_id: number;
-    receiver_id: number;
-    message: string;
-    created_at: string;
-}
-
-interface ChatUser {
-    id: number;
-    full_name: string;
-    email: string;
-    role: string;
-    team_id: number;
-    team_name: string;
+  id: number;
+  sender_id: number;
+  receiver_id: number;
+  message: string;
+  created_at: string;
 }
 
 interface ChatProps {
-    currentUserId: number;
-    receiverId: number;
+  currentUserId: number;
+  receiverId: number;
 }
 
-function Chat({ currentUserId }: ChatProps) {
+function Chat({ currentUserId, receiverId }: ChatProps) {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [text, setText] = useState("");
 
-    const [messages, setMessages] = useState<Message[]>([]);
-    const [text, setText] = useState("");
+  // ==========================================
+  // ONLINE USERS
+  // ==========================================
 
-    const [chatUsers, setChatUsers] = useState<ChatUser[]>([]);
-    const [receiverId, setReceiverId] = useState<number | null>(null);
-    const [onlineUsers, setOnlineUsers] = useState<number[]>([]);
-    // ==========================================
-    // LOAD TEAM MEMBERS
-    // ==========================================
+  const [onlineUsers, setOnlineUsers] = useState<number[]>([]);
 
-    useEffect(() => {
-const handleUserOnline = (userId: number) => {
-    setOnlineUsers((previous) => {
-        if (previous.includes(userId)) {
-            return previous;
-        }
+  // Check whether receiver is online
+  const isReceiverOnline = onlineUsers.includes(
+    Number(receiverId)
+  );
 
-        return [...previous, userId];
-    });
-};
+  // ==========================================
+  // JOIN USER + LOAD MESSAGE HISTORY
+  // ==========================================
 
-const handleUserOffline = (userId: number) => {
-    setOnlineUsers((previous) =>
-        previous.filter((id) => id !== userId)
+  useEffect(() => {
+    console.log(
+      "👤 Joining user room:",
+      currentUserId
     );
-};
 
-socket.on("user_online", handleUserOnline);
-socket.on("user_offline", handleUserOffline);
-
-socket.off("user_online", handleUserOnline);
-socket.off("user_offline", handleUserOffline);
-
-        const loadChatUsers = async () => {
-
-            try {
-
-                const response = await fetch(
-                    `http://localhost:5000/api/messages/users/${currentUserId}`
-                );
-
-                const result = await response.json();
-
-                if (result.success) {
-
-                    setChatUsers(result.data);
-
-                    // Select first teammate automatically
-                    if (
-                        result.data.length > 0 &&
-                        receiverId === null
-                    ) {
-                        setReceiverId(result.data[0].id);
-                    }
-                }
-
-            } catch (error) {
-
-                console.error(
-                    "❌ Failed to load chat users:",
-                    error
-                );
-
-            }
-
-        };
-
-        loadChatUsers();
-
-    }, [currentUserId]);
-
+    socket.emit(
+      "join_user",
+      currentUserId
+    );
 
     // ==========================================
-    // JOIN ROOM + LOAD MESSAGE HISTORY
+    // LOAD MESSAGE HISTORY
     // ==========================================
 
-    useEffect(() => {
-
-        if (receiverId === null) {
-            return;
-        }
-
-        socket.emit("join_user", currentUserId);
-
-        const loadMessages = async () => {
-
-            try {
-
-                const response = await fetch(
-                    `http://localhost:5000/api/messages/${currentUserId}/${receiverId}`
-                );
-
-                const result = await response.json();
-
-                if (result.success) {
-                    setMessages(result.data);
-                }
-
-            } catch (error) {
-
-                console.error(
-                    "❌ Failed to load message history:",
-                    error
-                );
-
-            }
-
-        };
-
-        loadMessages();
-
-
-        // ==========================================
-        // RECEIVE MESSAGE
-        // ==========================================
-
-        const handleReceiveMessage = (
-            message: Message
-        ) => {
-
-            // Only show messages belonging to
-            // the currently selected conversation
-
-            if (
-                (
-                    message.sender_id === receiverId &&
-                    message.receiver_id === currentUserId
-                )
-            ) {
-
-                setMessages((previous) => [
-                    ...previous,
-                    message
-                ]);
-
-            }
-
-        };
-
-
-        // ==========================================
-        // MESSAGE SENT
-        // ==========================================
-
-        const handleMessageSent = (
-            message: Message
-        ) => {
-
-            if (
-                message.sender_id === currentUserId &&
-                message.receiver_id === receiverId
-            ) {
-
-                setMessages((previous) => [
-                    ...previous,
-                    message
-                ]);
-
-            }
-
-        };
-
-
-        socket.on(
-            "receive_message",
-            handleReceiveMessage
+    const loadMessages = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:5000/api/messages/${currentUserId}/${receiverId}`
         );
 
-        socket.on(
-            "message_sent",
-            handleMessageSent
-        );
+        const result = await response.json();
 
-
-        return () => {
-
-            socket.off(
-                "receive_message",
-                handleReceiveMessage
-            );
-
-            socket.off(
-                "message_sent",
-                handleMessageSent
-            );
-
-        };
-
-    }, [currentUserId, receiverId]);
-
-
-    // ==========================================
-    // SEND MESSAGE
-    // ==========================================
-
-    const sendMessage = () => {
-
-        if (
-            !text.trim() ||
-            receiverId === null
-        ) {
-            return;
+        if (result.success) {
+          setMessages(result.data);
         }
-
-        socket.emit("send_message", {
-
-            sender_id: currentUserId,
-
-            receiver_id: receiverId,
-
-            message: text.trim()
-
-        });
-
-        setText("");
-
+      } catch (error) {
+        console.error(
+          "❌ Failed to load message history:",
+          error
+        );
+      }
     };
 
+    loadMessages();
 
     // ==========================================
-    // ENTER KEY
+    // ONLINE USERS
     // ==========================================
 
-    const handleKeyDown = (
-        event: React.KeyboardEvent<HTMLInputElement>
+    const handleOnlineUsers = (
+      users: number[]
     ) => {
+      console.log(
+        "🟢 Online users received:",
+        users
+      );
 
-        if (event.key === "Enter") {
-            sendMessage();
-        }
-
+      setOnlineUsers(
+        users.map((user) => Number(user))
+      );
     };
 
-
     // ==========================================
-    // SELECT USER
+    // RECEIVE MESSAGE
     // ==========================================
 
-    const selectUser = (userId: number) => {
+    const handleReceiveMessage = (
+      message: Message
+    ) => {
+      console.log(
+        "📩 Received:",
+        message
+      );
 
-        setReceiverId(userId);
-
-        setMessages([]);
-
+      // Only show messages from selected receiver
+      if (
+        Number(message.sender_id) ===
+          Number(receiverId) &&
+        Number(message.receiver_id) ===
+          Number(currentUserId)
+      ) {
+        setMessages((previous) => [
+          ...previous,
+          message,
+        ]);
+      }
     };
 
+    // ==========================================
+    // MESSAGE SENT
+    // ==========================================
 
-    // Find selected user's details
+    const handleMessageSent = (
+      message: Message
+    ) => {
+      console.log(
+        "📤 Sent:",
+        message
+      );
 
-    const selectedUser = chatUsers.find(
-        (user) => user.id === receiverId
+      if (
+        Number(message.sender_id) ===
+          Number(currentUserId) &&
+        Number(message.receiver_id) ===
+          Number(receiverId)
+      ) {
+        setMessages((previous) => [
+          ...previous,
+          message,
+        ]);
+      }
+    };
+
+    // ==========================================
+    // SOCKET EVENTS
+    // ==========================================
+
+    socket.on(
+      "online_users",
+      handleOnlineUsers
     );
 
+    socket.on(
+      "receive_message",
+      handleReceiveMessage
+    );
 
-    return (
+    socket.on(
+      "message_sent",
+      handleMessageSent
+    );
 
-        <div
-            style={{
-                display: "flex",
-                width: "800px",
-                height: "500px",
-                border: "1px solid #ddd",
-                borderRadius: "12px",
-                overflow: "hidden",
-                background: "#fff"
-            }}
+    // ==========================================
+    // CLEANUP
+    // ==========================================
+
+    return () => {
+      socket.off(
+        "online_users",
+        handleOnlineUsers
+      );
+
+      socket.off(
+        "receive_message",
+        handleReceiveMessage
+      );
+
+      socket.off(
+        "message_sent",
+        handleMessageSent
+      );
+    };
+
+  }, [
+    currentUserId,
+    receiverId
+  ]);
+
+  // ==========================================
+  // SEND MESSAGE
+  // ==========================================
+
+  const sendMessage = () => {
+    const trimmedMessage =
+      text.trim();
+
+    if (!trimmedMessage) {
+      return;
+    }
+
+    const messageData = {
+      sender_id: currentUserId,
+      receiver_id: receiverId,
+      message: trimmedMessage,
+    };
+
+    console.log(
+      "📨 Sending message:",
+      messageData
+    );
+
+    socket.emit(
+      "send_message",
+      messageData
+    );
+
+    setText("");
+  };
+
+  // ==========================================
+  // ENTER KEY
+  // ==========================================
+
+  const handleKeyDown = (
+    event: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+
+      sendMessage();
+    }
+  };
+
+  // ==========================================
+  // UI
+  // ==========================================
+
+  return (
+    <div
+      style={{
+        width: "500px",
+        height: "600px",
+        border: "1px solid #ccc",
+        borderRadius: "12px",
+        backgroundColor: "#ffffff",
+        display: "flex",
+        flexDirection: "column",
+        position: "relative",
+        zIndex: 9999,
+        pointerEvents: "auto",
+        overflow: "hidden",
+      }}
+    >
+
+      {/* ================================= */}
+      {/* HEADER */}
+      {/* ================================= */}
+
+      <div
+        style={{
+          padding: "18px",
+          borderBottom:
+            "1px solid #ddd",
+          textAlign: "center",
+          flexShrink: 0,
+        }}
+      >
+
+        <h2
+          style={{
+            margin: 0,
+          }}
         >
+          💬 Chat
+        </h2>
 
-            {/* ==================================
-                LEFT SIDE - TEAM MEMBERS
-            ================================== */}
+        {/* USER CONNECTION */}
 
-            <div
+        <p
+          style={{
+            margin:
+              "8px 0 0",
+            color: "#666",
+          }}
+        >
+          User {currentUserId}
+          {" → "}
+          User {receiverId}
+        </p>
+
+        {/* ONLINE / OFFLINE */}
+
+        <p
+          style={{
+            margin:
+              "6px 0 0",
+            color:
+              isReceiverOnline
+                ? "#16a34a"
+                : "#777",
+            fontWeight:
+              "bold",
+            fontSize:
+              "14px",
+          }}
+        >
+          {isReceiverOnline
+            ? "🟢 Online"
+            : "⚫ Offline"}
+        </p>
+
+      </div>
+
+      {/* ================================= */}
+      {/* MESSAGE AREA */}
+      {/* ================================= */}
+
+      <div
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          padding: "20px",
+          backgroundColor:
+            "#fafafa",
+        }}
+      >
+
+        {messages.length === 0 ? (
+
+          <p
+            style={{
+              textAlign:
+                "center",
+              color: "#888",
+            }}
+          >
+            No messages yet
+          </p>
+
+        ) : (
+
+          messages.map(
+            (msg) => (
+
+              <div
+                key={msg.id}
                 style={{
-                    width: "250px",
-                    borderRight: "1px solid #ddd",
-                    padding: "20px"
+                  display:
+                    "flex",
+
+                  justifyContent:
+                    Number(
+                      msg.sender_id
+                    ) ===
+                    Number(
+                      currentUserId
+                    )
+                      ? "flex-end"
+                      : "flex-start",
+
+                  marginBottom:
+                    "12px",
                 }}
-            >
-
-                <h2>👥 Team Members</h2>
-
-                {chatUsers.length === 0 ? (
-
-                    <p>No teammates found.</p>
-
-                ) : (
-
-                    chatUsers.map((user) => (
-
-                        <div
-                            key={user.id}
-                            onClick={() =>
-                                selectUser(user.id)
-                            }
-                            style={{
-                                padding: "12px",
-                                marginBottom: "8px",
-                                borderRadius: "8px",
-                                cursor: "pointer",
-
-                                background:
-                                    receiverId === user.id
-                                        ? "#e5e7eb"
-                                        : "transparent"
-                            }}
-                        >
-
-                            <strong>
-                                👤 {user.full_name}
-                            </strong>
-
-                            <div
-                                style={{
-                                    fontSize: "12px",
-                                    color: "#666",
-                                    marginTop: "4px"
-                                }}
-                            >
-                                {user.role}
-                            </div>
-
-                        </div>
-
-                    ))
-
-                )}
-
-            </div>
-
-
-            {/* ==================================
-                RIGHT SIDE - CHAT
-            ================================== */}
-
-            <div
-                style={{
-                    flex: 1,
-                    display: "flex",
-                    flexDirection: "column"
-                }}
-            >
-
-                {/* Header */}
+              >
 
                 <div
-                    style={{
-                        padding: "15px 20px",
-                        borderBottom: "1px solid #ddd"
-                    }}
+                  style={{
+                    maxWidth:
+                      "70%",
+
+                    padding:
+                      "10px 14px",
+
+                    borderRadius:
+                      "14px",
+
+                    backgroundColor:
+                      Number(
+                        msg.sender_id
+                      ) ===
+                      Number(
+                        currentUserId
+                      )
+                        ? "#2563eb"
+                        : "#e5e7eb",
+
+                    color:
+                      Number(
+                        msg.sender_id
+                      ) ===
+                      Number(
+                        currentUserId
+                      )
+                        ? "#ffffff"
+                        : "#111111",
+                  }}
                 >
-
-                    {selectedUser ? (
-
-                        <>
-                            <strong>
-                                💬 {selectedUser.full_name}
-                            </strong>
-
-                            <div
-                                style={{
-                                    fontSize: "12px",
-                                    color: "#666"
-                                }}
-                            >
-                                {selectedUser.team_name}
-                            </div>
-                        </>
-
-                    ) : (
-
-                        <strong>
-                            Select a teammate
-                        </strong>
-
-                    )}
-
+                  {msg.message}
                 </div>
 
+              </div>
 
-                {/* Messages */}
+            )
+          )
 
-                <div
-                    style={{
-                        flex: 1,
-                        overflowY: "auto",
-                        padding: "20px"
-                    }}
-                >
+        )}
 
-                    {messages.length === 0 ? (
+      </div>
 
-                        <p
-                            style={{
-                                textAlign: "center",
-                                color: "#888"
-                            }}
-                        >
-                            No messages yet. Start the conversation!
-                        </p>
+      {/* ================================= */}
+      {/* MESSAGE INPUT */}
+      {/* ================================= */}
 
-                    ) : (
+      <div
+        style={{
+          display:
+            "flex",
 
-                        messages.map((msg) => (
+          gap:
+            "10px",
 
-                            <div
-                                key={msg.id}
-                                style={{
-                                    textAlign:
-                                        msg.sender_id === currentUserId
-                                            ? "right"
-                                            : "left",
+          padding:
+            "15px",
 
-                                    marginBottom: "10px"
-                                }}
-                            >
+          borderTop:
+            "1px solid #ddd",
 
-                                <span
-                                    style={{
-                                        display: "inline-block",
-                                        padding: "10px 14px",
-                                        borderRadius: "12px",
+          backgroundColor:
+            "#ffffff",
 
-                                        background:
-                                            msg.sender_id === currentUserId
-                                                ? "#2563eb"
-                                                : "#e5e7eb",
+          flexShrink: 0,
 
-                                        color:
-                                            msg.sender_id === currentUserId
-                                                ? "#fff"
-                                                : "#111"
-                                    }}
-                                >
-                                    {msg.message}
-                                </span>
+          position:
+            "relative",
 
-                            </div>
+          zIndex:
+            10000,
 
-                        ))
+          pointerEvents:
+            "auto",
+        }}
+      >
 
-                    )}
+        <input
+          type="text"
+          value={text}
+          onChange={(event) => {
+            setText(
+              event.target.value
+            );
+          }}
+          onKeyDown={
+            handleKeyDown
+          }
+          placeholder="Type a message..."
+          autoComplete="off"
+          style={{
+            flex: 1,
 
-                </div>
+            height:
+              "42px",
 
+            padding:
+              "0 12px",
 
-                {/* Input */}
+            border:
+              "1px solid #aaa",
 
-                <div
-                    style={{
-                        display: "flex",
-                        gap: "8px",
-                        padding: "15px",
-                        borderTop: "1px solid #ddd"
-                    }}
-                >
+            borderRadius:
+              "8px",
 
-                    <input
-                        type="text"
-                        value={text}
-                        onChange={(event) =>
-                            setText(event.target.value)
-                        }
-                        onKeyDown={handleKeyDown}
-                        placeholder={
-                            receiverId === null
-                                ? "Select a teammate..."
-                                : "Type a message..."
-                        }
-                        disabled={receiverId === null}
-                        style={{
-                            flex: 1,
-                            padding: "10px",
-                            borderRadius: "8px",
-                            border: "1px solid #ccc"
-                        }}
-                    />
+            fontSize:
+              "16px",
 
-                    <button
-                        onClick={sendMessage}
-                        disabled={receiverId === null}
-                        style={{
-                            padding: "10px 16px",
-                            borderRadius: "8px",
-                            border: "none",
-                            cursor: "pointer"
-                        }}
-                    >
-                        Send
-                    </button>
+            outline:
+              "none",
 
-                </div>
+            backgroundColor:
+              "#ffffff",
 
-            </div>
+            color:
+              "#111111",
 
-        </div>
+            position:
+              "relative",
 
-    );
+            zIndex:
+              10001,
+
+            pointerEvents:
+              "auto",
+          }}
+        />
+
+        <button
+          type="button"
+          onClick={
+            sendMessage
+          }
+          style={{
+            height:
+              "42px",
+
+            padding:
+              "0 20px",
+
+            border:
+              "none",
+
+            borderRadius:
+              "8px",
+
+            backgroundColor:
+              "#2563eb",
+
+            color:
+              "#ffffff",
+
+            cursor:
+              "pointer",
+
+            fontSize:
+              "15px",
+
+            position:
+              "relative",
+
+            zIndex:
+              10001,
+
+            pointerEvents:
+              "auto",
+          }}
+        >
+          Send
+        </button>
+
+      </div>
+
+    </div>
+  );
 }
 
-export default Chat;
+export default Chat; 
