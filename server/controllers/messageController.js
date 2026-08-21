@@ -1,5 +1,52 @@
 const pool = require("../config/db");
+// ==========================================
+// GET CHAT USERS / TEAMMATES
+// ==========================================
 
+const getChatUsers = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        const result = await pool.query(
+            `
+            SELECT DISTINCT
+                u.id,
+                u.full_name,
+                u.email,
+                tm.role,
+                t.id AS team_id,
+                t.team_name
+            FROM team_members tm
+            JOIN users u
+                ON tm.user_id = u.id
+            JOIN teams t
+                ON tm.team_id = t.id
+            WHERE tm.team_id IN (
+                SELECT team_id
+                FROM team_members
+                WHERE user_id = $1
+            )
+            AND u.id != $1
+            ORDER BY u.full_name ASC
+            `,
+            [userId]
+        );
+
+        res.status(200).json({
+            success: true,
+            count: result.rows.length,
+            data: result.rows
+        });
+
+    } catch (error) {
+        console.error("GET CHAT USERS ERROR:", error);
+
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
 // GET CONVERSATION BETWEEN TWO USERS
 const getConversation = async (req, res) => {
     try {
@@ -43,5 +90,6 @@ const getConversation = async (req, res) => {
 };
 
 module.exports = {
-    getConversation
+    getConversation,
+    getChatUsers
 };

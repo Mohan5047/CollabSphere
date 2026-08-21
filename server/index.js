@@ -211,27 +211,33 @@ io.on("connection", (socket) => {
         "🟢 User connected:",
         socket.id
     );
+socket.on("join_user", (userId) => {
+    socket.join(`user_${userId}`);
 
+    socket.userId = userId;
+
+    console.log(`👤 User ${userId} joined room user_${userId}`);
+
+    // Tell everyone that this user is online
+    io.emit("user_online", Number(userId));
+});
     // -------------------------------
     // JOIN USER ROOM
     // -------------------------------
+socket.on("disconnect", () => {
+    console.log("🔴 User disconnected:", socket.id);
 
-    socket.on("join_user", (userId) => {
-
-        socket.join(`user_${userId}`);
-
-        console.log(
-            `👤 User ${userId} joined room user_${userId}`
-        );
-    });
-
+    if (socket.userId) {
+        io.emit("user_offline", Number(socket.userId));
+    }
+});
 
     // -------------------------------
     // SEND MESSAGE
     // -------------------------------
 
     socket.on("send_message", async (data) => {
-
+console.log("📨 Message received from frontend:", data);
         try {
 
             const {
