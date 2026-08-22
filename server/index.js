@@ -1,4 +1,4 @@
- require("dotenv").config();
+require("dotenv").config();
 
 const express = require("express");
 const http = require("http");
@@ -34,14 +34,30 @@ const io = new Server(server, {
 });
 
 // ==========================================
+// ONLINE USERS
+// ==========================================
+
+const onlineUsers = new Set();
+const socketUsers = new Map();
+
+// ==========================================
 // ROUTES
 // ==========================================
 
-const authRoutes = require("./routes/authRoutes");
-const projectRoutes = require("./routes/projectRoutes");
-const teamRoutes = require("./routes/teamRoutes");
-const applicationRoutes = require("./routes/applicationRoutes");
-const dashboardRoutes = require("./routes/dashboardRoutes");
+const authRoutes =
+    require("./routes/authRoutes");
+
+const projectRoutes =
+    require("./routes/projectRoutes");
+
+const teamRoutes =
+    require("./routes/teamRoutes");
+
+const applicationRoutes =
+    require("./routes/applicationRoutes");
+
+const dashboardRoutes =
+    require("./routes/dashboardRoutes");
 
 const learningCategoryRoutes =
     require("./routes/learningCategoryRoutes");
@@ -95,17 +111,33 @@ const messageRoutes =
 // API ROUTES
 // ==========================================
 
-app.use("/api/auth", authRoutes);
+app.use(
+    "/api/auth",
+    authRoutes
+);
 
-app.use("/api/projects", projectRoutes);
+app.use(
+    "/api/projects",
+    projectRoutes
+);
 
-app.use("/api/teams", teamRoutes);
+app.use(
+    "/api/teams",
+    teamRoutes
+);
 
-app.use("/api/dashboard", dashboardRoutes);
+app.use(
+    "/api/dashboard",
+    dashboardRoutes
+);
 
-app.use("/api/applications", applicationRoutes);
+app.use(
+    "/api/applications",
+    applicationRoutes
+);
 
 // Learning
+
 app.use(
     "/api/learning-categories",
     learningCategoryRoutes
@@ -152,6 +184,7 @@ app.use(
 );
 
 // Quizzes
+
 app.use(
     "/api/quizzes",
     quizRoutes
@@ -168,24 +201,28 @@ app.use(
 );
 
 // Certificates
+
 app.use(
     "/api/certificates",
     certificateRoutes
 );
 
 // Tasks
+
 app.use(
     "/api/tasks",
     taskRoutes
 );
 
 // Notifications
+
 app.use(
     "/api/notifications",
     notificationRoutes
 );
 
-// Messages / Chat
+// Messages
+
 app.use(
     "/api/messages",
     messageRoutes
@@ -195,250 +232,418 @@ app.use(
 // HOME ROUTE
 // ==========================================
 
-app.get("/", (req, res) => {
-    res.send(
-        "🚀 CollabSphere Backend Running Successfully"
-    );
-});
+app.get(
+    "/",
+    (req, res) => {
+        res.send(
+            "🚀 CollabSphere Backend Running Successfully"
+        );
+    }
+);
 
 // ==========================================
 // SOCKET.IO LOGIC
 // ==========================================
-const onlineUsers = new Set();
-const socketUsers = new Map();
-io.on("connection", (socket) => {
 
-    console.log("🟢 User connected:", socket.id);
-
-    // ==========================================
-    // JOIN USER ROOM
-    // ==========================================
-
-    socket.on("join_user", (userId) => {
-
-        console.log("🔥 JOIN_USER EVENT RECEIVED");
-        console.log("👤 User ID received:", userId);
-
-        // Join personal room
-        socket.join(`user_${userId}`);
-
-        // Store which user belongs to this socket
-        socketUsers.set(socket.id, userId);
-
-        // Add user to online users
-        onlineUsers.add(Number(userId));
+io.on(
+    "connection",
+    (socket) => {
 
         console.log(
-            `👤 User ${userId} joined room user_${userId}`
-        );
-
-        console.log(
-            "👥 Online users:",
-            [...onlineUsers]
-        );
-
-        // Send online users to everyone
-        io.emit(
-            "online_users",
-            [...onlineUsers]
-        );
-
-        // Show sockets in this room
-        const room = io.sockets.adapter.rooms.get(
-            `user_${userId}`
-        );
-
-        console.log(
-            `👥 Sockets in user_${userId}:`,
-            room ? [...room] : []
-        );
-    });
-
-
-    // ==========================================
-    // SEND MESSAGE
-    // ==========================================
-
-    socket.on("send_message", async (data) => {
-
-        try {
-
-            console.log(
-                "📨 Message received from frontend:",
-                data
-            );
-
-            const {
-                sender_id,
-                receiver_id,
-                message
-            } = data;
-
-            // Validate data
-            if (
-                !sender_id ||
-                !receiver_id ||
-                !message
-            ) {
-
-                console.log(
-                    "❌ Invalid message data"
-                );
-
-                return;
-            }
-
-
-            // ==========================================
-            // SAVE MESSAGE TO DATABASE
-            // ==========================================
-
-            const result = await pool.query(
-                `INSERT INTO messages
-                (sender_id, receiver_id, message)
-                VALUES ($1, $2, $3)
-                RETURNING *`,
-                [
-                    sender_id,
-                    receiver_id,
-                    message
-                ]
-            );
-
-            const savedMessage = result.rows[0];
-
-            console.log(
-                "💾 Message saved:",
-                savedMessage
-            );
-
-
-            // ==========================================
-            // SEND TO RECEIVER
-            // ==========================================
-
-            io.to(
-                `user_${receiver_id}`
-            ).emit(
-                "receive_message",
-                savedMessage
-            );
-
-
-            // ==========================================
-            // SEND BACK TO SENDER
-            // ==========================================
-
-            io.to(
-                `user_${sender_id}`
-            ).emit(
-                "message_sent",
-                savedMessage
-            );
-
-
-            console.log(
-                `📤 Message sent from User ${sender_id} to User ${receiver_id}`
-            );
-
-        } catch (error) {
-
-            console.error(
-                "❌ SOCKET MESSAGE ERROR:",
-                error
-            );
-        }
-    });
-
-
-    // ==========================================
-    // DISCONNECT
-    // ==========================================
-
-    socket.on("disconnect", () => {
-
-        console.log(
-            "🔴 User disconnected:",
+            "🟢 User connected:",
             socket.id
         );
 
-        const userId =
-            socketUsers.get(socket.id);
+        // ==========================================
+        // JOIN USER ROOM
+        // ==========================================
 
-        if (userId) {
+        socket.on(
+            "join_user",
+            (userId) => {
 
-            socketUsers.delete(socket.id);
+                console.log(
+                    "🔥 JOIN_USER EVENT RECEIVED"
+                );
 
-            // Check whether this user has another
-            // connected socket/browser
-            let stillConnected = false;
+                console.log(
+                    "👤 User ID received:",
+                    userId
+                );
 
-            for (
-                const connectedUserId
-                of socketUsers.values()
-            ) {
+                // Join personal room
 
-                if (
-                    Number(connectedUserId) ===
-                    Number(userId)
-                ) {
+                socket.join(
+                    `user_${userId}`
+                );
 
-                    stillConnected = true;
-                    break;
-                }
-            }
+                // Store socket → user
 
-            // Only mark offline if no other
-            // socket belongs to this user
-            if (!stillConnected) {
-
-                onlineUsers.delete(
+                socketUsers.set(
+                    socket.id,
                     Number(userId)
                 );
+
+                // Add user online
+
+                onlineUsers.add(
+                    Number(userId)
+                );
+
+                console.log(
+                    `👤 User ${userId} joined room user_${userId}`
+                );
+
+                console.log(
+                    "👥 Online users:",
+                    [...onlineUsers]
+                );
+
+                // Send online users
+
+                io.emit(
+                    "online_users",
+                    [...onlineUsers]
+                );
+
+                // Show room sockets
+
+                const room =
+                    io.sockets.adapter.rooms.get(
+                        `user_${userId}`
+                    );
+
+                console.log(
+                    `👥 Sockets in user_${userId}:`,
+                    room
+                        ? [...room]
+                        : []
+                );
             }
+        );
 
-            console.log(
-                "👥 Online users:",
-                [...onlineUsers]
-            );
 
-            // Update everyone
-            io.emit(
-                "online_users",
-                [...onlineUsers]
-            );
-        }
-    });
+        // ==========================================
+        // TYPING START
+        // ==========================================
 
-});
+        socket.on(
+            "typing_start",
+            (data) => {
+
+                try {
+
+                    const {
+                        sender_id,
+                        receiver_id
+                    } = data;
+
+                    console.log(
+                        `✍️ User ${sender_id} is typing to User ${receiver_id}`
+                    );
+
+                    if (
+                        !sender_id ||
+                        !receiver_id
+                    ) {
+                        return;
+                    }
+
+                    // Send typing event
+                    // ONLY to receiver
+
+                    io.to(
+                        `user_${receiver_id}`
+                    ).emit(
+                        "user_typing",
+                        {
+                            user_id:
+                                Number(sender_id)
+                        }
+                    );
+
+                } catch (error) {
+
+                    console.error(
+                        "❌ TYPING START ERROR:",
+                        error
+                    );
+                }
+            }
+        );
+
+
+        // ==========================================
+        // TYPING STOP
+        // ==========================================
+
+        socket.on(
+            "typing_stop",
+            (data) => {
+
+                try {
+
+                    const {
+                        sender_id,
+                        receiver_id
+                    } = data;
+
+                    console.log(
+                        `⌨️ User ${sender_id} stopped typing`
+                    );
+
+                    if (
+                        !sender_id ||
+                        !receiver_id
+                    ) {
+                        return;
+                    }
+
+                    // Tell receiver typing stopped
+
+                    io.to(
+                        `user_${receiver_id}`
+                    ).emit(
+                        "user_stopped_typing",
+                        {
+                            user_id:
+                                Number(sender_id)
+                        }
+                    );
+
+                } catch (error) {
+
+                    console.error(
+                        "❌ TYPING STOP ERROR:",
+                        error
+                    );
+                }
+            }
+        );
+
+
+        // ==========================================
+        // SEND MESSAGE
+        // ==========================================
+
+        socket.on(
+            "send_message",
+            async (data) => {
+
+                try {
+
+                    console.log(
+                        "📨 Message received from frontend:",
+                        data
+                    );
+
+                    const {
+                        sender_id,
+                        receiver_id,
+                        message
+                    } = data;
+
+                    // Validate
+
+                    if (
+                        !sender_id ||
+                        !receiver_id ||
+                        !message
+                    ) {
+
+                        console.log(
+                            "❌ Invalid message data"
+                        );
+
+                        return;
+                    }
+
+                    // ==========================================
+                    // SAVE MESSAGE
+                    // ==========================================
+
+                    const result =
+                        await pool.query(
+                            `INSERT INTO messages
+                            (sender_id, receiver_id, message)
+                            VALUES ($1, $2, $3)
+                            RETURNING *`,
+                            [
+                                sender_id,
+                                receiver_id,
+                                message
+                            ]
+                        );
+
+                    const savedMessage =
+                        result.rows[0];
+
+                    console.log(
+                        "💾 Message saved:",
+                        savedMessage
+                    );
+
+                    // ==========================================
+                    // STOP TYPING AUTOMATICALLY
+                    // ==========================================
+
+                    io.to(
+                        `user_${receiver_id}`
+                    ).emit(
+                        "user_stopped_typing",
+                        {
+                            user_id:
+                                Number(sender_id)
+                        }
+                    );
+
+                    // ==========================================
+                    // SEND TO RECEIVER
+                    // ==========================================
+
+                    io.to(
+                        `user_${receiver_id}`
+                    ).emit(
+                        "receive_message",
+                        savedMessage
+                    );
+
+                    // ==========================================
+                    // SEND TO SENDER
+                    // ==========================================
+
+                    io.to(
+                        `user_${sender_id}`
+                    ).emit(
+                        "message_sent",
+                        savedMessage
+                    );
+
+                    console.log(
+                        `📤 Message sent from User ${sender_id} to User ${receiver_id}`
+                    );
+
+                } catch (error) {
+
+                    console.error(
+                        "❌ SOCKET MESSAGE ERROR:",
+                        error
+                    );
+                }
+            }
+        );
+
+
+        // ==========================================
+        // DISCONNECT
+        // ==========================================
+
+        socket.on(
+            "disconnect",
+            () => {
+
+                console.log(
+                    "🔴 User disconnected:",
+                    socket.id
+                );
+
+                const userId =
+                    socketUsers.get(
+                        socket.id
+                    );
+
+                if (userId) {
+
+                    socketUsers.delete(
+                        socket.id
+                    );
+
+                    // Check if another socket
+                    // belongs to same user
+
+                    let stillConnected =
+                        false;
+
+                    for (
+                        const connectedUserId
+                        of socketUsers.values()
+                    ) {
+
+                        if (
+                            Number(
+                                connectedUserId
+                            ) ===
+                            Number(userId)
+                        ) {
+
+                            stillConnected =
+                                true;
+
+                            break;
+                        }
+                    }
+
+                    // Mark offline only when
+                    // no other connection exists
+
+                    if (
+                        !stillConnected
+                    ) {
+
+                        onlineUsers.delete(
+                            Number(userId)
+                        );
+                    }
+
+                    console.log(
+                        "👥 Online users:",
+                        [...onlineUsers]
+                    );
+
+                    // Update everyone
+
+                    io.emit(
+                        "online_users",
+                        [...onlineUsers]
+                    );
+                }
+            }
+        );
+    }
+);
+
 // ==========================================
 // DATABASE CONNECTION TEST
 // ==========================================
 
 pool
-    .query("SELECT NOW()")
-    .then((result) => {
+    .query(
+        "SELECT NOW()"
+    )
+    .then(
+        (result) => {
 
-        console.log(
-            "✅ Database Connected"
-        );
+            console.log(
+                "✅ Database Connected"
+            );
 
-        console.log(
-            result.rows[0]
-        );
+            console.log(
+                result.rows[0]
+            );
+        }
+    )
+    .catch(
+        (error) => {
 
-    })
-    .catch((error) => {
+            console.error(
+                "❌ Database Connection Failed"
+            );
 
-        console.error(
-            "❌ Database Connection Failed"
-        );
-
-        console.error(
-            error.message
-        );
-
-    });
+            console.error(
+                error.message
+            );
+        }
+    );
 
 // ==========================================
 // START SERVER
@@ -447,10 +652,13 @@ pool
 const PORT =
     process.env.PORT || 5000;
 
-server.listen(PORT, () => {
+server.listen(
+    PORT,
+    () => {
 
-    console.log(
-        `Server is running on http://localhost:${PORT}`
-    );
+        console.log(
+            `Server is running on http://localhost:${PORT}`
+        );
 
-});
+    }
+);
