@@ -372,7 +372,49 @@ io.on(
             }
         );
 
+// ==========================================
+// MARK MESSAGES AS READ
+// ==========================================
 
+socket.on("mark_messages_read", async (data) => {
+    try {
+        const { reader_id, sender_id } = data;
+
+        if (!reader_id || !sender_id) {
+            return;
+        }
+
+        const result = await pool.query(
+            `UPDATE messages
+             SET is_read = true
+             WHERE receiver_id = $1
+             AND sender_id = $2
+             AND is_read = false
+             RETURNING *`,
+            [reader_id, sender_id]
+        );
+
+        console.log(
+            `👁️ User ${reader_id} read messages from User ${sender_id}`
+        );
+
+        // Notify the sender
+        io.to(`user_${sender_id}`).emit(
+            "messages_read",
+            {
+                reader_id,
+                sender_id,
+                messages: result.rows
+            }
+        );
+
+    } catch (error) {
+        console.error(
+            "❌ MARK READ ERROR:",
+            error
+        );
+    }
+});
         // ==========================================
         // TYPING STOP
         // ==========================================

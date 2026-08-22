@@ -6,6 +6,7 @@ interface Message {
   sender_id: number;
   receiver_id: number;
   message: string;
+  is_read: boolean;
   created_at: string;
 }
 
@@ -28,7 +29,7 @@ function Chat({
     onlineUsers.includes(Number(receiverId));
 
   // ==========================================
-  // JOIN USER + LOAD HISTORY + SOCKET EVENTS
+  // JOIN USER + LOAD MESSAGE HISTORY
   // ==========================================
 
   useEffect(() => {
@@ -57,6 +58,11 @@ function Chat({
 
         if (result.success) {
           setMessages(result.data);
+
+          console.log(
+            "📚 Message history loaded:",
+            result.data
+          );
         }
       } catch (error) {
         console.error(
@@ -110,9 +116,17 @@ function Chat({
           message,
         ]);
 
-        // Receiver sent message,
-        // so typing indicator disappears
         setIsReceiverTyping(false);
+
+        // Immediately mark the received
+        // message as read because chat is open
+        socket.emit(
+          "mark_messages_read",
+          {
+            reader_id: currentUserId,
+            sender_id: receiverId,
+          }
+        );
       }
     };
 
@@ -142,17 +156,14 @@ function Chat({
     };
 
     // ==========================================
-    // RECEIVER STARTED TYPING
+    // USER STARTED TYPING
     // ==========================================
 
     const handleUserTyping = (
-      data: { user_id: number }
+      data: {
+        user_id: number;
+      }
     ) => {
-      console.log(
-        "✍️ User typing:",
-        data
-      );
-
       if (
         Number(data.user_id) ===
         Number(receiverId)
@@ -162,17 +173,14 @@ function Chat({
     };
 
     // ==========================================
-    // RECEIVER STOPPED TYPING
+    // USER STOPPED TYPING
     // ==========================================
 
     const handleUserStoppedTyping = (
-      data: { user_id: number }
+      data: {
+        user_id: number;
+      }
     ) => {
-      console.log(
-        "⌨️ User stopped typing:",
-        data
-      );
-
       if (
         Number(data.user_id) ===
         Number(receiverId)
@@ -182,7 +190,48 @@ function Chat({
     };
 
     // ==========================================
-    // SOCKET EVENTS
+    // MESSAGES READ
+    // ==========================================
+
+    const handleMessagesRead = (
+      data: {
+        reader_id: number;
+        sender_id: number;
+      }
+    ) => {
+      console.log(
+        "👁️ Messages read:",
+        data
+      );
+
+      // The receiver has read messages
+      // that were sent by current user
+      if (
+        Number(data.reader_id) ===
+        Number(receiverId)
+      ) {
+        setMessages((previous) =>
+          previous.map((msg) => {
+            if (
+              Number(msg.sender_id) ===
+                Number(currentUserId) &&
+              Number(msg.receiver_id) ===
+                Number(receiverId)
+            ) {
+              return {
+                ...msg,
+                is_read: true,
+              };
+            }
+
+            return msg;
+          })
+        );
+      }
+    };
+
+    // ==========================================
+    // SOCKET LISTENERS
     // ==========================================
 
     socket.on(
@@ -208,6 +257,11 @@ function Chat({
     socket.on(
       "user_stopped_typing",
       handleUserStoppedTyping
+    );
+
+    socket.on(
+      "messages_read",
+      handleMessagesRead
     );
 
     // ==========================================
@@ -239,7 +293,40 @@ function Chat({
         "user_stopped_typing",
         handleUserStoppedTyping
       );
+
+      socket.off(
+        "messages_read",
+        handleMessagesRead
+      );
     };
+  }, [
+    currentUserId,
+    receiverId,
+  ]);
+
+  // ==========================================
+  // MARK EXISTING MESSAGES AS READ
+  // ==========================================
+
+  useEffect(() => {
+    if (
+      !currentUserId ||
+      !receiverId
+    ) {
+      return;
+    }
+
+    console.log(
+      "👁️ Marking messages as read..."
+    );
+
+    socket.emit(
+      "mark_messages_read",
+      {
+        reader_id: currentUserId,
+        sender_id: receiverId,
+      }
+    );
   }, [
     currentUserId,
     receiverId,
@@ -252,34 +339,41 @@ function Chat({
   const handleTextChange = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const value = event.target.value;
+    const value =
+      event.target.value;
 
     setText(value);
 
     // ==========================================
-    // USER IS TYPING
+    // USER STARTED TYPING
     // ==========================================
 
-    if (value.trim().length > 0) {
+    if (
+      value.trim().length > 0
+    ) {
       socket.emit(
         "typing_start",
         {
-          sender_id: currentUserId,
-          receiver_id: receiverId,
+          sender_id:
+            currentUserId,
+          receiver_id:
+            receiverId,
         }
       );
     }
 
     // ==========================================
-    // INPUT IS EMPTY
+    // USER STOPPED TYPING
     // ==========================================
 
     else {
       socket.emit(
         "typing_stop",
         {
-          sender_id: currentUserId,
-          receiver_id: receiverId,
+          sender_id:
+            currentUserId,
+          receiver_id:
+            receiverId,
         }
       );
     }
@@ -301,15 +395,20 @@ function Chat({
     socket.emit(
       "typing_stop",
       {
-        sender_id: currentUserId,
-        receiver_id: receiverId,
+        sender_id:
+          currentUserId,
+        receiver_id:
+          receiverId,
       }
     );
 
     const messageData = {
-      sender_id: currentUserId,
-      receiver_id: receiverId,
-      message: trimmedMessage,
+      sender_id:
+        currentUserId,
+      receiver_id:
+        receiverId,
+      message:
+        trimmedMessage,
     };
 
     console.log(
@@ -322,7 +421,6 @@ function Chat({
       messageData
     );
 
-    // Clear input
     setText("");
   };
 
@@ -333,7 +431,9 @@ function Chat({
   const handleKeyDown = (
     event: React.KeyboardEvent<HTMLInputElement>
   ) => {
-    if (event.key === "Enter") {
+    if (
+      event.key === "Enter"
+    ) {
       event.preventDefault();
 
       sendMessage();
@@ -349,14 +449,18 @@ function Chat({
       style={{
         width: "500px",
         height: "600px",
-        border: "1px solid #ccc",
+        border:
+          "1px solid #ccc",
         borderRadius: "12px",
-        backgroundColor: "#ffffff",
+        backgroundColor:
+          "#ffffff",
         display: "flex",
-        flexDirection: "column",
+        flexDirection:
+          "column",
         position: "relative",
         zIndex: 9999,
-        pointerEvents: "auto",
+        pointerEvents:
+          "auto",
         overflow: "hidden",
       }}
     >
@@ -383,25 +487,32 @@ function Chat({
 
         <p
           style={{
-            margin: "8px 0 0",
+            margin:
+              "8px 0 0",
             color: "#666",
           }}
         >
-          User {currentUserId}
+          User{" "}
+          {currentUserId}
           {" → "}
-          User {receiverId}
+          User{" "}
+          {receiverId}
         </p>
 
         {/* ONLINE / OFFLINE */}
 
         <p
           style={{
-            margin: "6px 0 0",
-            color: isReceiverOnline
-              ? "#16a34a"
-              : "#777",
-            fontWeight: "bold",
-            fontSize: "14px",
+            margin:
+              "6px 0 0",
+            color:
+              isReceiverOnline
+                ? "#16a34a"
+                : "#777",
+            fontWeight:
+              "bold",
+            fontSize:
+              "14px",
           }}
         >
           {isReceiverOnline
@@ -414,14 +525,19 @@ function Chat({
         {isReceiverTyping && (
           <p
             style={{
-              margin: "6px 0 0",
-              color: "#2563eb",
-              fontSize: "13px",
-              fontStyle: "italic",
+              margin:
+                "6px 0 0",
+              color:
+                "#2563eb",
+              fontSize:
+                "13px",
+              fontStyle:
+                "italic",
             }}
           >
-            ✍️ User {receiverId} is
-            typing...
+            ✍️ User{" "}
+            {receiverId}{" "}
+            is typing...
           </p>
         )}
       </div>
@@ -433,89 +549,134 @@ function Chat({
       <div
         style={{
           flex: 1,
-          overflowY: "auto",
-          padding: "20px",
-          backgroundColor: "#fafafa",
+          overflowY:
+            "auto",
+          padding:
+            "20px",
+          backgroundColor:
+            "#fafafa",
         }}
       >
-        {messages.length === 0 ? (
+        {messages.length ===
+        0 ? (
           <p
             style={{
-              textAlign: "center",
-              color: "#888",
+              textAlign:
+                "center",
+              color:
+                "#888",
             }}
           >
             No messages yet
           </p>
         ) : (
-          messages.map((msg) => (
-            <div
-              key={msg.id}
-              style={{
-                display: "flex",
-                justifyContent:
-                  Number(
-                    msg.sender_id
-                  ) ===
-                  Number(
-                    currentUserId
-                  )
-                    ? "flex-end"
-                    : "flex-start",
-                marginBottom: "12px",
-              }}
-            >
+          messages.map(
+            (msg) => (
               <div
+                key={
+                  msg.id
+                }
                 style={{
-                  maxWidth: "70%",
-                  padding:
-                    "10px 14px",
-                  borderRadius:
-                    "14px",
-                  backgroundColor:
+                  display:
+                    "flex",
+                  justifyContent:
                     Number(
                       msg.sender_id
                     ) ===
                     Number(
                       currentUserId
                     )
-                      ? "#2563eb"
-                      : "#e5e7eb",
-                  color:
-                    Number(
-                      msg.sender_id
-                    ) ===
-                    Number(
-                      currentUserId
-                    )
-                      ? "#ffffff"
-                      : "#111111",
+                      ? "flex-end"
+                      : "flex-start",
+                  marginBottom:
+                    "12px",
                 }}
               >
-                {msg.message}
+                <div
+                  style={{
+                    maxWidth:
+                      "70%",
+                    padding:
+                      "10px 14px",
+                    borderRadius:
+                      "14px",
+                    backgroundColor:
+                      Number(
+                        msg.sender_id
+                      ) ===
+                      Number(
+                        currentUserId
+                      )
+                        ? "#2563eb"
+                        : "#e5e7eb",
+                    color:
+                      Number(
+                        msg.sender_id
+                      ) ===
+                      Number(
+                        currentUserId
+                      )
+                        ? "#ffffff"
+                        : "#111111",
+                  }}
+                >
+                  <span>
+                    {
+                      msg.message
+                    }
+                  </span>
+
+                  {/* READ STATUS */}
+
+                  {Number(
+                    msg.sender_id
+                  ) ===
+                    Number(
+                      currentUserId
+                    ) && (
+                    <span
+                      style={{
+                        marginLeft:
+                          "8px",
+                        fontSize:
+                          "12px",
+                        opacity:
+                          0.85,
+                      }}
+                    >
+                      {msg.is_read
+                        ? "✓✓"
+                        : "✓"}
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
-          ))
+            )
+          )
         )}
       </div>
 
       {/* ================================= */}
-      {/* INPUT AREA */}
+      {/* INPUT */}
       {/* ================================= */}
 
       <div
         style={{
-          display: "flex",
+          display:
+            "flex",
           gap: "10px",
-          padding: "15px",
+          padding:
+            "15px",
           borderTop:
             "1px solid #ddd",
           backgroundColor:
             "#ffffff",
           flexShrink: 0,
-          position: "relative",
+          position:
+            "relative",
           zIndex: 10000,
-          pointerEvents: "auto",
+          pointerEvents:
+            "auto",
         }}
       >
         <input
@@ -531,19 +692,28 @@ function Chat({
           autoComplete="off"
           style={{
             flex: 1,
-            height: "42px",
-            padding: "0 12px",
+            height:
+              "42px",
+            padding:
+              "0 12px",
             border:
               "1px solid #aaa",
-            borderRadius: "8px",
-            fontSize: "16px",
-            outline: "none",
+            borderRadius:
+              "8px",
+            fontSize:
+              "16px",
+            outline:
+              "none",
             backgroundColor:
               "#ffffff",
-            color: "#111111",
-            position: "relative",
-            zIndex: 10001,
-            pointerEvents: "auto",
+            color:
+              "#111111",
+            position:
+              "relative",
+            zIndex:
+              10001,
+            pointerEvents:
+              "auto",
           }}
         />
 
@@ -553,18 +723,28 @@ function Chat({
             sendMessage
           }
           style={{
-            height: "42px",
-            padding: "0 20px",
-            border: "none",
-            borderRadius: "8px",
+            height:
+              "42px",
+            padding:
+              "0 20px",
+            border:
+              "none",
+            borderRadius:
+              "8px",
             backgroundColor:
               "#2563eb",
-            color: "#ffffff",
-            cursor: "pointer",
-            fontSize: "15px",
-            position: "relative",
-            zIndex: 10001,
-            pointerEvents: "auto",
+            color:
+              "#ffffff",
+            cursor:
+              "pointer",
+            fontSize:
+              "15px",
+            position:
+              "relative",
+            zIndex:
+              10001,
+            pointerEvents:
+              "auto",
           }}
         >
           Send
