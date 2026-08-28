@@ -2,6 +2,9 @@
 
 const router = express.Router();
 
+const authMiddleware =
+    require("../middleware/authMiddleware");
+
 const {
     createTeam,
     getAllTeams,
@@ -11,30 +14,64 @@ const {
     assignTeamLead
 } = require("../controllers/teamController");
 
-// Create team
-router.post("/", createTeam);
+// ==========================================
+// CREATE TEAM
+// ==========================================
 
+router.post(
+    "/",
+    authMiddleware,
+    createTeam
+);
 
-// Get all teams
-router.get("/", getAllTeams);
+// ==========================================
+// GET ALL TEAMS
+// ==========================================
 
+router.get(
+    "/",
+    authMiddleware,
+    getAllTeams
+);
 
-// Add member
-router.post("/members", addTeamMember);
+// ==========================================
+// ADD MEMBER
+// ==========================================
 
+router.post(
+    "/members",
+    authMiddleware,
+    addTeamMember
+);
 
-// Remove member
+// ==========================================
+// REMOVE MEMBER
+// ==========================================
+
 router.delete(
     "/:teamId/members/:userId",
+    authMiddleware,
     removeTeamMember
 );
 
+// ==========================================
+// ASSIGN TEAM LEAD
+// ==========================================
+
 router.put(
     "/:teamId/lead/:userId",
+    authMiddleware,
     assignTeamLead
 );
-// Get team with members
-router.get("/:teamId", getTeamById);
 
+// ==========================================
+// GET TEAM
+// ==========================================
+
+router.get(
+    "/:teamId",
+    authMiddleware,
+    getTeamById
+);
 
 module.exports = router;
