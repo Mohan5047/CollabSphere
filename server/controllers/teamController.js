@@ -6,103 +6,66 @@
 
 const createTeam = async (req, res) => {
     try {
-        const {
-            project_id,
-            team_name
-        } = req.body;
+        const { project_id, team_name } = req.body;
 
-        const userId =
-            Number(req.user.id);
+        const userId = Number(req.user.id);
 
-        if (
-            !project_id ||
-            !team_name ||
-            !team_name.trim()
-        ) {
+        if (!project_id || !team_name || !team_name.trim()) {
             return res.status(400).json({
                 success: false,
-                message:
-                    "project_id and team_name are required"
+                message: "project_id and team_name are required"
             });
         }
 
-        // Check project ownership
-        const project =
-            await pool.query(
-                `SELECT id, owner_id
-                 FROM projects
-                 WHERE id = $1`,
-                [project_id]
-            );
+        // Check whether project exists
+        const projectResult = await pool.query(
+            `SELECT id, owner_id
+             FROM projects
+             WHERE id = $1`,
+            [project_id]
+        );
 
-        if (project.rows.length === 0) {
+        if (projectResult.rows.length === 0) {
             return res.status(404).json({
                 success: false,
-                message:
-                    "Project not found"
+                message: "Project not found"
             });
         }
 
+        // Only project owner can create a team
         if (
-            Number(project.rows[0].owner_id) !==
-            userId
+            Number(projectResult.rows[0].owner_id) !== userId
         ) {
             return res.status(403).json({
                 success: false,
-                message:
-                    "Only the project owner can create a team"
+                message: "Only the project owner can create a team"
             });
         }
 
-        // Prevent multiple teams for same project
-        const existingTeam =
-            await pool.query(
-                `SELECT id
-                 FROM teams
-                 WHERE project_id = $1`,
-                [project_id]
-            );
-
-        if (existingTeam.rows.length > 0) {
-            return res.status(409).json({
-                success: false,
-                message:
-                    "A team already exists for this project"
-            });
-        }
-
-        const result =
-            await pool.query(
-                `INSERT INTO teams
-                (project_id, team_name)
-                VALUES ($1, $2)
-                RETURNING *`,
-                [
-                    project_id,
-                    team_name.trim()
-                ]
-            );
+        // Multiple teams for the same project ARE allowed
+        const result = await pool.query(
+            `INSERT INTO teams
+             (project_id, team_name)
+             VALUES ($1, $2)
+             RETURNING *`,
+            [project_id, team_name.trim()]
+        );
 
         res.status(201).json({
             success: true,
-            message:
-                "Team created successfully",
+            message: "Team created successfully",
             data: result.rows[0]
         });
 
     } catch (error) {
-        console.error(
-            "CREATE TEAM ERROR:",
-            error
-        );
+        console.error("CREATE TEAM ERROR:", error);
 
         res.status(500).json({
             success: false,
-            message: "Server Error"
+            message: error.message
         });
     }
 };
-
 
 // ==========================================
 // GET ALL TEAMS
