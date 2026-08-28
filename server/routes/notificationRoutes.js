@@ -2,6 +2,9 @@ const express = require("express");
 
 const router = express.Router();
 
+const authMiddleware =
+    require("../middleware/authMiddleware");
+
 const {
     createNotification,
     getUserNotifications,
@@ -10,14 +13,39 @@ const {
     deleteNotification
 } = require("../controllers/notificationController");
 
-router.post("/", createNotification);
+// Create notification
+router.post(
+    "/",
+    authMiddleware,
+    createNotification
+);
 
-router.get("/user/:userId", getUserNotifications);
+// Get user notifications
+router.get(
+    "/user/:userId",
+    authMiddleware,
+    getUserNotifications
+);
 
-router.put("/:notificationId/read", markAsRead);
+// Mark one as read
+router.put(
+    "/:notificationId/read",
+    authMiddleware,
+    markAsRead
+);
 
-router.put("/user/:userId/read-all", markAllAsRead);
+// Mark all as read
+router.put(
+    "/user/:userId/read-all",
+    authMiddleware,
+    markAllAsRead
+);
 
-router.delete("/:notificationId", deleteNotification);
+// Delete notification
+router.delete(
+    "/:notificationId",
+    authMiddleware,
+    deleteNotification
+);
 
 module.exports = router;

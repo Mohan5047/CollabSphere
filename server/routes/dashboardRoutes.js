@@ -2,10 +2,18 @@
 
 const router = express.Router();
 
+const authMiddleware =
+    require("../middleware/authMiddleware");
+
 const {
     getUserDashboard
 } = require("../controllers/dashboardController");
 
-router.get("/user/:userId", getUserDashboard);
+// Get logged-in user's dashboard
+router.get(
+    "/user/:userId",
+    authMiddleware,
+    getUserDashboard
+);
 
 module.exports = router;
