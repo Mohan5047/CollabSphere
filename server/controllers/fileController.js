@@ -35,7 +35,9 @@ const checkTeamAccess = async (teamId, userId) => {
 
 const uploadFile = async (req, res) => {
     try {
-        const { team_id } = req.body;
+       const {
+    team_id
+} = req.body || {};
         const userId = Number(req.user.id);
 
         if (!team_id) {
@@ -101,16 +103,17 @@ const uploadFile = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("UPLOAD FILE ERROR:", error);
+    console.error("UPLOAD FILE ERROR:", error);
 
-        if (req.file && fs.existsSync(req.file.path)) {
-            fs.unlinkSync(req.file.path);
-        }
+    if (req.file && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+    }
 
-        res.status(500).json({
-            success: false,
-            message: "Server Error"
-        });
+    res.status(500).json({
+        success: false,
+        message: error.message,
+        error: error.code || "UNKNOWN_ERROR"
+    });
     }
 };
 

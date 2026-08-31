@@ -15,7 +15,6 @@ const {
     deleteFile
 } = require("../controllers/fileController");
 
-
 // ==========================================
 // UPLOAD DIRECTORY
 // ==========================================
@@ -31,13 +30,11 @@ if (!fs.existsSync(uploadDir)) {
     });
 }
 
-
 // ==========================================
-// MULTER CONFIG
+// MULTER STORAGE
 // ==========================================
 
 const storage = multer.diskStorage({
-
     destination: (req, file, cb) => {
         cb(null, uploadDir);
     },
@@ -52,20 +49,22 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({
-    storage,
+// ==========================================
+// MULTER
+// ==========================================
 
+const upload = multer({
+    storage: storage,
     limits: {
         fileSize: 10 * 1024 * 1024
     }
 });
 
-
 // ==========================================
 // ROUTES
 // ==========================================
 
-// Upload
+// Upload file
 router.post(
     "/upload",
     authMiddleware,
@@ -80,19 +79,18 @@ router.get(
     getTeamFiles
 );
 
-// Download
+// Download file
 router.get(
     "/:fileId/download",
     authMiddleware,
     downloadFile
 );
 
-// Delete
+// Delete file
 router.delete(
     "/:fileId",
     authMiddleware,
     deleteFile
 );
-
 
 module.exports = router;
