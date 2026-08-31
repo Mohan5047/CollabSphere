@@ -103,7 +103,7 @@ const taskRoutes =
 
 const notificationRoutes =
     require("./routes/notificationRoutes");
-
+const fileRoutes = require("./routes/fileRoutes");
 const messageRoutes =
     require("./routes/messageRoutes");
 
@@ -220,7 +220,7 @@ app.use(
     "/api/notifications",
     notificationRoutes
 );
-
+app.use("/api/files", fileRoutes);
 // Messages
 
 app.use(
