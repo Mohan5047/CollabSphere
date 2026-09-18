@@ -104,6 +104,8 @@ const taskRoutes =
 const notificationRoutes =
     require("./routes/notificationRoutes");
 const fileRoutes = require("./routes/fileRoutes");
+const activityRoutes = require("./routes/activityRoutes");
+const aiRoutes = require("./routes/aiRoutes");
 const messageRoutes =
     require("./routes/messageRoutes");
 
@@ -221,6 +223,8 @@ app.use(
     notificationRoutes
 );
 app.use("/api/files", fileRoutes);
+app.use("/api/activities", activityRoutes);
+app.use("/api/ai", aiRoutes);
 // Messages
 
 app.use(
@@ -240,6 +244,29 @@ app.get(
         );
     }
 );
+
+// ==========================================
+// 404 CATCH-ALL ROUTE
+// ==========================================
+
+app.use((req, res) => {
+    res.status(404).json({
+        success: false,
+        message: `Route ${req.originalUrl} not found`
+    });
+});
+
+// ==========================================
+// GLOBAL ERROR HANDLER
+// ==========================================
+
+app.use((err, req, res, next) => {
+    console.error("GLOBAL ERROR:", err);
+    res.status(err.status || 500).json({
+        success: false,
+        message: err.message || "Internal Server Error"
+    });
+});
 
 // ==========================================
 // SOCKET.IO LOGIC

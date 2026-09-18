@@ -10,7 +10,8 @@ const {
     getUserNotifications,
     markAsRead,
     markAllAsRead,
-    deleteNotification
+    deleteNotification,
+    sendTestEmail
 } = require("../controllers/notificationController");
 
 // Create notification
@@ -18,6 +19,13 @@ router.post(
     "/",
     authMiddleware,
     createNotification
+);
+
+// Test email notification
+router.post(
+    "/test-email",
+    authMiddleware,
+    sendTestEmail
 );
 
 // Get user notifications

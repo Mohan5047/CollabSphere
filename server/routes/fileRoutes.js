@@ -61,6 +61,39 @@ const upload = multer({
 });
 
 // ==========================================
+// MULTER ERROR HANDLING WRAPPER
+// ==========================================
+
+const handleUpload = (req, res, next) => {
+    upload.single("file")(req, res, (err) => {
+        if (err instanceof multer.MulterError) {
+            if (err.code === "LIMIT_FILE_SIZE") {
+                return res.status(400).json({
+                    success: false,
+                    message: "File size exceeds 10MB limit"
+                });
+            }
+            if (err.code === "LIMIT_UNEXPECTED_FILE") {
+                return res.status(400).json({
+                    success: false,
+                    message: "Unexpected field name. Please upload using the form-data key 'file'"
+                });
+            }
+            return res.status(400).json({
+                success: false,
+                message: `Upload error: ${err.message}`
+            });
+        } else if (err) {
+            return res.status(400).json({
+                success: false,
+                message: err.message
+            });
+        }
+        next();
+    });
+};
+
+// ==========================================
 // ROUTES
 // ==========================================
 
@@ -68,7 +101,7 @@ const upload = multer({
 router.post(
     "/upload",
     authMiddleware,
-    upload.single("file"),
+    handleUpload,
     uploadFile
 );
 

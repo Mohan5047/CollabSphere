@@ -1,12 +1,18 @@
 const pool = require("../config/db");
 const fs = require("fs");
 const path = require("path");
+const { logActivity } = require("../utils/activityLogger");
 
 // ==========================================
 // CHECK TEAM ACCESS
 // ==========================================
 
 const checkTeamAccess = async (teamId, userId) => {
+    const numericTeamId = Number(teamId);
+    if (!numericTeamId || isNaN(numericTeamId)) {
+        return false;
+    }
+
     const result = await pool.query(
         `SELECT t.id
          FROM teams t
@@ -22,7 +28,7 @@ const checkTeamAccess = async (teamId, userId) => {
                 AND tm.user_id = $2
             )
          )`,
-        [teamId, userId]
+        [numericTeamId, userId]
     );
 
     return result.rows.length > 0;
@@ -35,15 +41,16 @@ const checkTeamAccess = async (teamId, userId) => {
 
 const uploadFile = async (req, res) => {
     try {
-       const {
-    team_id
-} = req.body || {};
+        const { team_id } = req.body || {};
         const userId = Number(req.user.id);
 
-        if (!team_id) {
+        if (!team_id || isNaN(Number(team_id))) {
+            if (req.file && fs.existsSync(req.file.path)) {
+                fs.unlinkSync(req.file.path);
+            }
             return res.status(400).json({
                 success: false,
-                message: "team_id is required"
+                message: "team_id is required and must be a valid number"
             });
         }
 
@@ -54,21 +61,37 @@ const uploadFile = async (req, res) => {
             });
         }
 
+        const numericTeamId = Number(team_id);
+
+        // Check if team exists
+        const teamCheck = await pool.query(
+            "SELECT id FROM teams WHERE id = $1",
+            [numericTeamId]
+        );
+
+        if (teamCheck.rows.length === 0) {
+            if (req.file && fs.existsSync(req.file.path)) {
+                fs.unlinkSync(req.file.path);
+            }
+            return res.status(404).json({
+                success: false,
+                message: "Team not found"
+            });
+        }
+
         const hasAccess = await checkTeamAccess(
-            team_id,
+            numericTeamId,
             userId
         );
 
         if (!hasAccess) {
-            // Remove uploaded file if access is denied
-            if (fs.existsSync(req.file.path)) {
+            if (req.file && fs.existsSync(req.file.path)) {
                 fs.unlinkSync(req.file.path);
             }
 
             return res.status(403).json({
                 success: false,
-                message:
-                    "You are not a member of this team"
+                message: "You are not a member of this team"
             });
         }
 
@@ -86,7 +109,7 @@ const uploadFile = async (req, res) => {
             VALUES ($1, $2, $3, $4, $5, $6, $7)
             RETURNING *`,
             [
-                team_id,
+                numericTeamId,
                 userId,
                 req.file.originalname,
                 req.file.filename,
@@ -96,24 +119,32 @@ const uploadFile = async (req, res) => {
             ]
         );
 
+        const savedFile = result.rows[0];
+
+        await logActivity({
+            userId,
+            activityType: "FILE_UPLOADED",
+            description: `Uploaded file "${req.file.originalname}"`,
+            teamId: numericTeamId
+        });
+
         res.status(201).json({
             success: true,
             message: "File uploaded successfully",
-            data: result.rows[0]
+            data: savedFile
         });
 
     } catch (error) {
-    console.error("UPLOAD FILE ERROR:", error);
+        console.error("UPLOAD FILE ERROR:", error);
 
-    if (req.file && fs.existsSync(req.file.path)) {
-        fs.unlinkSync(req.file.path);
-    }
+        if (req.file && fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
 
-    res.status(500).json({
-        success: false,
-        message: error.message,
-        error: error.code || "UNKNOWN_ERROR"
-    });
+        res.status(500).json({
+            success: false,
+            message: "Server Error"
+        });
     }
 };
 
@@ -127,16 +158,37 @@ const getTeamFiles = async (req, res) => {
         const { teamId } = req.params;
         const userId = Number(req.user.id);
 
+        if (!teamId || isNaN(Number(teamId))) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid team ID"
+            });
+        }
+
+        const numericTeamId = Number(teamId);
+
+        // Check if team exists
+        const teamCheck = await pool.query(
+            "SELECT id FROM teams WHERE id = $1",
+            [numericTeamId]
+        );
+
+        if (teamCheck.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Team not found"
+            });
+        }
+
         const hasAccess = await checkTeamAccess(
-            teamId,
+            numericTeamId,
             userId
         );
 
         if (!hasAccess) {
             return res.status(403).json({
                 success: false,
-                message:
-                    "You are not a member of this team"
+                message: "You are not a member of this team"
             });
         }
 
@@ -155,7 +207,7 @@ const getTeamFiles = async (req, res) => {
                 ON f.uploaded_by = u.id
              WHERE f.team_id = $1
              ORDER BY f.created_at DESC`,
-            [teamId]
+            [numericTeamId]
         );
 
         res.status(200).json({
@@ -184,6 +236,15 @@ const downloadFile = async (req, res) => {
         const { fileId } = req.params;
         const userId = Number(req.user.id);
 
+        if (!fileId || isNaN(Number(fileId))) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid file ID"
+            });
+        }
+
+        const numericFileId = Number(fileId);
+
         const result = await pool.query(
             `SELECT
                 f.*,
@@ -192,7 +253,7 @@ const downloadFile = async (req, res) => {
              INNER JOIN teams t
                 ON f.team_id = t.id
              WHERE f.id = $1`,
-            [fileId]
+            [numericFileId]
         );
 
         if (result.rows.length === 0) {
@@ -216,11 +277,10 @@ const downloadFile = async (req, res) => {
             });
         }
 
-        if (!fs.existsSync(file.file_path)) {
+        if (!file.file_path || !fs.existsSync(file.file_path)) {
             return res.status(404).json({
                 success: false,
-                message:
-                    "File no longer exists on server"
+                message: "File no longer exists on server"
             });
         }
 
@@ -230,10 +290,7 @@ const downloadFile = async (req, res) => {
         );
 
     } catch (error) {
-        console.error(
-            "DOWNLOAD FILE ERROR:",
-            error
-        );
+        console.error("DOWNLOAD FILE ERROR:", error);
 
         res.status(500).json({
             success: false,
@@ -252,6 +309,15 @@ const deleteFile = async (req, res) => {
         const { fileId } = req.params;
         const userId = Number(req.user.id);
 
+        if (!fileId || isNaN(Number(fileId))) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid file ID"
+            });
+        }
+
+        const numericFileId = Number(fileId);
+
         const result = await pool.query(
             `SELECT
                 f.*,
@@ -262,7 +328,7 @@ const deleteFile = async (req, res) => {
              INNER JOIN projects p
                 ON t.project_id = p.id
              WHERE f.id = $1`,
-            [fileId]
+            [numericFileId]
         );
 
         if (result.rows.length === 0) {
@@ -281,35 +347,35 @@ const deleteFile = async (req, res) => {
         ) {
             return res.status(403).json({
                 success: false,
-                message:
-                    "You do not have permission to delete this file"
+                message: "You do not have permission to delete this file"
             });
         }
 
         await pool.query(
             `DELETE FROM files
              WHERE id = $1`,
-            [fileId]
+            [numericFileId]
         );
 
-        if (
-            file.file_path &&
-            fs.existsSync(file.file_path)
-        ) {
+        if (file.file_path && fs.existsSync(file.file_path)) {
             fs.unlinkSync(file.file_path);
         }
 
+        await logActivity({
+            userId,
+            activityType: "FILE_DELETED",
+            description: `Deleted file "${file.original_name}"`,
+            teamId: file.team_id,
+            projectId: file.owner_id ? file.project_id : null
+        });
+
         res.status(200).json({
             success: true,
-            message:
-                "File deleted successfully"
+            message: "File deleted successfully"
         });
 
     } catch (error) {
-        console.error(
-            "DELETE FILE ERROR:",
-            error
-        );
+        console.error("DELETE FILE ERROR:", error);
 
         res.status(500).json({
             success: false,

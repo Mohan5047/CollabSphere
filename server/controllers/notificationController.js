@@ -1,4 +1,5 @@
- const pool = require("../config/db");
+const pool = require("../config/db");
+const { sendEmail } = require("../utils/emailService");
 
 // ==========================================
 // CREATE NOTIFICATION
@@ -280,6 +281,50 @@ const deleteNotification = async (
 
 
 // ==========================================
+// TEST EMAIL NOTIFICATION
+// ==========================================
+
+const sendTestEmail = async (req, res) => {
+    try {
+        const { to, subject, message } = req.body || {};
+        const targetEmail = to || req.user.email;
+
+        if (!targetEmail) {
+            return res.status(400).json({
+                success: false,
+                message: "Recipient email is required"
+            });
+        }
+
+        const emailResult = await sendEmail({
+            to: targetEmail,
+            subject: subject || "CollabSphere Notification",
+            text: message || "Hello! This is a test email notification from CollabSphere.",
+            html: `<div style="font-family: Arial, sans-serif; padding: 20px;">
+                <h2 style="color: #4F46E5;">CollabSphere Notification</h2>
+                <p>${message || "Hello! This is a test email notification from CollabSphere."}</p>
+                <hr style="border: 1px solid #E5E7EB; margin: 20px 0;" />
+                <p style="color: #6B7280; font-size: 12px;">Sent from CollabSphere Platform</p>
+            </div>`
+        });
+
+        res.status(200).json({
+            success: true,
+            message: emailResult.simulated
+                ? "Email notification simulated successfully"
+                : "Email notification sent successfully",
+            data: emailResult
+        });
+    } catch (error) {
+        console.error("TEST EMAIL ERROR:", error);
+        res.status(500).json({
+            success: false,
+            message: "Server Error"
+        });
+    }
+};
+
+// ==========================================
 // EXPORT
 // ==========================================
 
@@ -288,5 +333,6 @@ module.exports = {
     getUserNotifications,
     markAsRead,
     markAllAsRead,
-    deleteNotification
+    deleteNotification,
+    sendTestEmail
 };
