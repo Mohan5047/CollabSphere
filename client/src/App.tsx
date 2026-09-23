@@ -1,16 +1,17 @@
-import React, { Suspense, lazy } from "react";
+import React, { Suspense, lazy, useState } from "react";
 import {
   BrowserRouter,
   Routes,
   Route,
   Outlet,
   Link,
-  useLocation,
   useParams,
 } from "react-router-dom";
 import Chat from "./chat";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Navbar from "./components/Navbar";
+import Sidebar from "./components/Sidebar";
 
 // ============================================================================
 // LAZY-LOADED PAGE IMPORTS
@@ -209,108 +210,29 @@ const PageLoader: React.FC = () => (
 // PROTECTED APPLICATION SHELL LAYOUT
 // ============================================================================
 
-const NAV_ITEMS = [
-  { label: "Dashboard", path: "/dashboard" },
-  { label: "Projects", path: "/projects" },
-  { label: "Teams", path: "/teams" },
-  { label: "Tasks", path: "/tasks" },
-  { label: "Applications", path: "/applications" },
-  { label: "Learning", path: "/learning" },
-  { label: "Certificates", path: "/certificates" },
-  { label: "Files", path: "/files" },
-  { label: "Chat", path: "/chat" },
-  { label: "Activity", path: "/activity" },
-  { label: "Notifications", path: "/notifications" },
-  { label: "AI Assistant", path: "/ai-assistant" },
-  { label: "Profile", path: "/profile" },
-];
-
 const AppShellLayout: React.FC = () => {
-  const location = useLocation();
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   return (
     <div className="app-shell">
-      <aside className="sidebar">
-        <div
-          style={{
-            padding: "1.25rem 1.5rem",
-            borderBottom: "1px solid var(--border)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <Link
-            to="/dashboard"
-            style={{
-              fontSize: "1.15rem",
-              fontWeight: 800,
-              color: "var(--text)",
-              letterSpacing: "-0.02em",
-            }}
-          >
-            CollabSphere
-          </Link>
-          <span className="badge badge-primary">v1.0</span>
-        </div>
+      <Sidebar
+        isOpen={isMobileSidebarOpen}
+        onClose={() => setIsMobileSidebarOpen(false)}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
+      />
 
-        <nav
-          style={{
-            padding: "1rem 0.75rem",
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.25rem",
-            overflowY: "auto",
-            flex: 1,
-          }}
-        >
-          {NAV_ITEMS.map((item) => {
-            const isActive =
-              location.pathname === item.path ||
-              location.pathname.startsWith(`${item.path}/`);
-
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                style={{
-                  padding: "0.6rem 0.9rem",
-                  borderRadius: "var(--radius-sm)",
-                  fontSize: "0.9rem",
-                  fontWeight: isActive ? 600 : 500,
-                  color: isActive ? "var(--text)" : "var(--text-muted)",
-                  backgroundColor: isActive
-                    ? "var(--primary-soft)"
-                    : "transparent",
-                  borderLeft: isActive
-                    ? "3px solid var(--primary)"
-                    : "3px solid transparent",
-                  transition: "all var(--transition-fast)",
-                }}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-      </aside>
-
-      <div className="main-wrapper">
-        <header className="topbar">
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <span className="text-muted" style={{ fontSize: "0.875rem" }}>
-              Workspace
-            </span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <Link to="/notifications" className="btn btn-secondary btn-sm">
-              Notifications
-            </Link>
-            <Link to="/profile" className="btn btn-primary btn-sm">
-              Profile
-            </Link>
-          </div>
-        </header>
+      <div
+        className="main-wrapper"
+        style={{
+          marginLeft: isSidebarCollapsed ? "78px" : undefined,
+          transition: "margin-left var(--transition-normal)",
+        }}
+      >
+        <Navbar
+          onToggleSidebar={() => setIsMobileSidebarOpen((prev) => !prev)}
+        />
 
         <main style={{ flex: 1 }}>
           <Outlet />
