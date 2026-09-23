@@ -3,13 +3,14 @@ import {
   BrowserRouter,
   Routes,
   Route,
-  Navigate,
   Outlet,
   Link,
   useLocation,
   useParams,
 } from "react-router-dom";
 import Chat from "./chat";
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // ============================================================================
 // LAZY-LOADED PAGE IMPORTS
@@ -203,31 +204,6 @@ const PageLoader: React.FC = () => (
   </div>
 );
 
-// ============================================================================
-// REUSABLE PROTECTED ROUTE GUARD
-// Can later be moved to src/components/ProtectedRoute.tsx and connected to AuthContext
-// ============================================================================
-
-interface ProtectedRouteProps {
-  redirectPath?: string;
-}
-
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
-  redirectPath = "/login",
-}) => {
-  const location = useLocation();
-  const token = localStorage.getItem("token");
-
-  // During incremental development, if a token is strictly required:
-  // Uncomment the redirect check below once LoginPage stores the JWT token.
-  const isAuthenticated = Boolean(token) || true;
-
-  if (!isAuthenticated) {
-    return <Navigate to={redirectPath} state={{ from: location }} replace />;
-  }
-
-  return <Outlet />;
-};
 
 // ============================================================================
 // PROTECTED APPLICATION SHELL LAYOUT
@@ -374,60 +350,62 @@ const NotFoundPage: React.FC = () => (
 
 function App() {
   return (
-    <BrowserRouter>
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
-          {/* ==========================================
-              PUBLIC ROUTES
-             ========================================== */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+    <AuthProvider>
+      <BrowserRouter>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            {/* ==========================================
+                PUBLIC ROUTES
+               ========================================== */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
 
-          {/* ==========================================
-              PROTECTED ROUTES
-             ========================================== */}
-          <Route element={<ProtectedRoute />}>
-            <Route element={<AppShellLayout />}>
-              <Route path="/dashboard" element={<DashboardPage />} />
+            {/* ==========================================
+                PROTECTED ROUTES
+               ========================================== */}
+            <Route element={<ProtectedRoute />}>
+              <Route element={<AppShellLayout />}>
+                <Route path="/dashboard" element={<DashboardPage />} />
 
-              {/* Projects */}
-              <Route path="/projects" element={<ProjectsPage />} />
-              <Route path="/projects/:id" element={<ProjectDetailsPage />} />
+                {/* Projects */}
+                <Route path="/projects" element={<ProjectsPage />} />
+                <Route path="/projects/:id" element={<ProjectDetailsPage />} />
 
-              {/* Teams */}
-              <Route path="/teams" element={<TeamsPage />} />
-              <Route path="/teams/:id" element={<TeamDetailsPage />} />
+                {/* Teams */}
+                <Route path="/teams" element={<TeamsPage />} />
+                <Route path="/teams/:id" element={<TeamDetailsPage />} />
 
-              {/* Tasks & Applications */}
-              <Route path="/tasks" element={<TasksPage />} />
-              <Route path="/applications" element={<ApplicationsPage />} />
+                {/* Tasks & Applications */}
+                <Route path="/tasks" element={<TasksPage />} />
+                <Route path="/applications" element={<ApplicationsPage />} />
 
-              {/* Learning, Quizzes & Certificates */}
-              <Route path="/learning" element={<LearningPage />} />
-              <Route path="/learning/:id" element={<CourseDetailsPage />} />
-              <Route path="/quiz/:id" element={<QuizPage />} />
-              <Route path="/certificates" element={<CertificatesPage />} />
+                {/* Learning, Quizzes & Certificates */}
+                <Route path="/learning" element={<LearningPage />} />
+                <Route path="/learning/:id" element={<CourseDetailsPage />} />
+                <Route path="/quiz/:id" element={<QuizPage />} />
+                <Route path="/certificates" element={<CertificatesPage />} />
 
-              {/* Communication, Files, Activity & AI */}
-              <Route path="/notifications" element={<NotificationsPage />} />
-              <Route path="/chat" element={<ChatPage />} />
-              <Route path="/files" element={<FilesPage />} />
-              <Route path="/activity" element={<ActivityPage />} />
-              <Route path="/ai-assistant" element={<AiAssistantPage />} />
+                {/* Communication, Files, Activity & AI */}
+                <Route path="/notifications" element={<NotificationsPage />} />
+                <Route path="/chat" element={<ChatPage />} />
+                <Route path="/files" element={<FilesPage />} />
+                <Route path="/activity" element={<ActivityPage />} />
+                <Route path="/ai-assistant" element={<AiAssistantPage />} />
 
-              {/* User Profile */}
-              <Route path="/profile" element={<ProfilePage />} />
+                {/* User Profile */}
+                <Route path="/profile" element={<ProfilePage />} />
+              </Route>
             </Route>
-          </Route>
 
-          {/* ==========================================
-              404 FALLBACK ROUTE
-             ========================================== */}
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </Suspense>
-    </BrowserRouter>
+            {/* ==========================================
+                404 FALLBACK ROUTE
+               ========================================== */}
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </Suspense>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 
