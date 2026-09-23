@@ -108,34 +108,13 @@ const ProjectsPage = lazy(() => import("./pages/Projects"));
 const ProjectDetailsPage = lazy(() => import("./pages/ProjectDetails"));
 const TeamsPage = lazy(() => import("./pages/Teams"));
 const TeamDetailsPage = lazy(() => import("./pages/TeamDetails"));
-const TasksPage = createLazyPlaceholder(
-  "Tasks",
-  "Track TODO, IN_PROGRESS, and COMPLETED tasks across your teams."
-);
-const ApplicationsPage = createLazyPlaceholder(
-  "Applications",
-  "Review and manage project join requests and applications."
-);
-const LearningPage = createLazyPlaceholder(
-  "Learning Hub",
-  "Explore categories, structured learning tracks, and interactive courses."
-);
-const CourseDetailsPage = createLazyPlaceholder(
-  "Course Viewer",
-  "Study course modules, lessons, and downloadable learning resources."
-);
-const QuizPage = createLazyPlaceholder(
-  "Quiz Assessment",
-  "Complete course quizzes and track your score attempts."
-);
-const CertificatesPage = createLazyPlaceholder(
-  "Certificates",
-  "View and download your earned course completion certificates."
-);
-const NotificationsPage = createLazyPlaceholder(
-  "Notifications",
-  "Stay updated on task assignments, messages, and team alerts."
-);
+const TasksPage = lazy(() => import("./pages/Tasks"));
+const ApplicationsPage = lazy(() => import("./pages/Applications"));
+const LearningPage = lazy(() => import("./pages/Learning"));
+const CourseDetailsPage = lazy(() => import("./pages/CourseDetails"));
+const QuizPage = lazy(() => import("./pages/Quiz"));
+const CertificatesPage = lazy(() => import("./pages/Certificates"));
+const NotificationsPage = lazy(() => import("./pages/Notifications"));
 const FilesPage = createLazyPlaceholder(
   "File Sharing",
   "Upload, list, download, and manage shared team files (up to 10 MB)."

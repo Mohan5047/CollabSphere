@@ -474,12 +474,13 @@ export const taskService = {
   }) => http.post<ApiResponse<Task>>(API_ENDPOINTS.TASKS.BASE, payload),
 
   updateTaskStatus: (taskId: number | string, status: TaskStatus) =>
-    http.patch<ApiResponse<Task>>(API_ENDPOINTS.TASKS.UPDATE_STATUS(taskId), {
+    http.put<ApiResponse<Task>>(API_ENDPOINTS.TASKS.UPDATE_STATUS(taskId), {
       status,
     }),
 
-  assignTask: (taskId: number | string, user_id: number) =>
-    http.patch<ApiResponse<Task>>(API_ENDPOINTS.TASKS.ASSIGN(taskId), {
+  assignTask: (taskId: number | string, user_id: number | null) =>
+    http.put<ApiResponse<Task>>(API_ENDPOINTS.TASKS.ASSIGN(taskId), {
+      assigned_to: user_id,
       user_id,
     }),
 
@@ -548,11 +549,26 @@ export const learningService = {
   getModules: () =>
     http.get<ApiResponse<CourseModule[]>>(API_ENDPOINTS.LEARNING.MODULES),
 
+  getModulesByCourse: (courseId: number | string) =>
+    http.get<ApiResponse<CourseModule[]>>(
+      `${API_ENDPOINTS.LEARNING.MODULES}/course/${courseId}`
+    ),
+
   getLessons: () =>
     http.get<ApiResponse<Lesson[]>>(API_ENDPOINTS.LEARNING.LESSONS),
 
+  getLessonsByModule: (moduleId: number | string) =>
+    http.get<ApiResponse<Lesson[]>>(
+      `${API_ENDPOINTS.LEARNING.LESSONS}/module/${moduleId}`
+    ),
+
   getLessonResources: () =>
     http.get<ApiResponse>(API_ENDPOINTS.LEARNING.LESSON_RESOURCES),
+
+  getResourcesByLesson: (lessonId: number | string) =>
+    http.get<ApiResponse>(
+      `${API_ENDPOINTS.LEARNING.LESSON_RESOURCES}/lesson/${lessonId}`
+    ),
 
   enrollInCourse: (payload: { user_id: number; course_id: number }) =>
     http.post<ApiResponse>(API_ENDPOINTS.LEARNING.ENROLLMENTS, payload),
@@ -578,19 +594,28 @@ export const quizService = {
   getQuizQuestions: () =>
     http.get<ApiResponse>(API_ENDPOINTS.QUIZZES.QUESTIONS),
 
+  getQuestionsByQuiz: (quizId: number | string) =>
+    http.get<ApiResponse>(`${API_ENDPOINTS.QUIZZES.QUESTIONS}/quiz/${quizId}`),
+
   getQuizAttempts: () =>
     http.get<ApiResponse<QuizAttempt[]>>(API_ENDPOINTS.QUIZZES.ATTEMPTS),
+
+  getUserQuizAttempts: (userId: number | string) =>
+    http.get<ApiResponse<QuizAttempt[]>>(
+      `${API_ENDPOINTS.QUIZZES.ATTEMPTS}/user/${userId}`
+    ),
 
   submitQuizAttempt: (payload: {
     quiz_id: number;
     user_id: number;
-    score?: number;
-    answers?: unknown;
+    answers: { question_id: number; selected_option: string }[];
   }) =>
-    http.post<ApiResponse<QuizAttempt>>(
-      API_ENDPOINTS.QUIZZES.ATTEMPTS,
-      payload
-    ),
+    http.post<{
+      success: boolean;
+      message?: string;
+      result?: QuizAttempt;
+      data?: QuizAttempt;
+    }>(`${API_ENDPOINTS.QUIZZES.ATTEMPTS}/submit`, payload),
 };
 
 // ============================================================================
@@ -605,10 +630,9 @@ export const progressService = {
 
   updateProgress: (payload: {
     user_id: number;
-    lesson_id?: number;
-    course_id?: number;
-    completed?: boolean;
-    progress_percentage?: number;
+    lesson_id: number;
+    status: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
+    progress_percent: number;
   }) => http.post<ApiResponse>(API_ENDPOINTS.PROGRESS.BASE, payload),
 
   deleteProgress: (id: number | string) =>

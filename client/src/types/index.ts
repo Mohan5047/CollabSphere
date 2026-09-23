@@ -174,6 +174,7 @@ export interface LearningTrack {
 export interface Course {
   id: number;
   track_id?: number;
+  category_id?: number;
   title: string;
   description?: string;
   instructor?: string;
@@ -187,6 +188,8 @@ export interface CourseModule {
   id: number;
   course_id: number;
   title: string;
+  description?: string;
+  module_order?: number;
   order_index?: number;
 }
 
@@ -196,25 +199,55 @@ export interface Lesson {
   title: string;
   content?: string;
   video_url?: string;
+  lesson_order?: number;
   order_index?: number;
+  duration_minutes?: number;
   is_completed?: boolean;
+}
+
+export interface LessonResource {
+  id: number;
+  lesson_id: number;
+  resource_type: "VIDEO" | "PDF" | "NOTES" | "CODE" | "LINK" | "YOUTUBE" | string;
+  title?: string;
+  resource_url: string;
+  description?: string;
+  created_at?: string;
 }
 
 export interface Quiz {
   id: number;
   course_id: number;
   title: string;
-  passing_score: number;
+  description?: string;
+  total_marks?: number;
+  passing_marks?: number;
+  passing_score?: number;
   created_at?: string;
 }
 
-export interface QuizAttempt {
+export interface QuizQuestion {
   id: number;
   quiz_id: number;
+  question_text: string;
+  option_a: string;
+  option_b: string;
+  option_c: string;
+  option_d: string;
+  marks?: number;
+}
+
+export interface QuizAttempt {
+  id?: number;
+  attempt_id?: number;
+  quiz_id: number;
   quiz_title?: string;
-  user_id: number;
+  user_id?: number;
   score: number;
+  total_marks?: number;
+  percentage?: number;
   passed: boolean;
+  completed_at?: string;
   attempted_at?: string;
   created_at?: string;
 }
@@ -224,7 +257,10 @@ export interface Certificate {
   user_id: number;
   course_id: number;
   course_title?: string;
+  certificate_number?: string;
   certificate_code?: string;
+  full_name?: string;
+  email?: string;
   issued_at?: string;
   created_at?: string;
 }
