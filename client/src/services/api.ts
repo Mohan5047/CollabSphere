@@ -329,14 +329,58 @@ export const userService = {
 
 export const projectService = {
   getAllProjects: () =>
-    http.get<{ success: boolean; projects: Project[]; data?: Project[] }>(
-      API_ENDPOINTS.PROJECTS.BASE
-    ),
+    http.get<{
+      success: boolean;
+      totalProjects?: number;
+      projects: Project[];
+      data?: Project[];
+    }>(API_ENDPOINTS.PROJECTS.BASE),
 
-  getProjectById: (id: number | string) =>
-    http.get<{ success: boolean; project: Project; data?: Project }>(
-      API_ENDPOINTS.PROJECTS.BY_ID(id)
-    ),
+  getMyProjects: () =>
+    http.get<{
+      success: boolean;
+      totalProjects?: number;
+      projects: Project[];
+      data?: Project[];
+    }>(`${API_ENDPOINTS.PROJECTS.BASE}/my-projects`),
+
+  getProjectById: async (
+    id: number | string
+  ): Promise<{ success: boolean; project: Project; isOwner?: boolean }> => {
+    const numericId = Number(id);
+    const [allRes, myRes] = await Promise.allSettled([
+      http.get<{ success: boolean; projects: Project[]; data?: Project[] }>(
+        API_ENDPOINTS.PROJECTS.BASE
+      ),
+      http.get<{ success: boolean; projects: Project[]; data?: Project[] }>(
+        `${API_ENDPOINTS.PROJECTS.BASE}/my-projects`
+      ),
+    ]);
+
+    const allProjects =
+      allRes.status === "fulfilled"
+        ? allRes.value.projects || allRes.value.data || []
+        : [];
+    const myProjects =
+      myRes.status === "fulfilled"
+        ? myRes.value.projects || myRes.value.data || []
+        : [];
+
+    const myProjectIds = new Set(myProjects.map((p) => Number(p.id)));
+    const found =
+      allProjects.find((p) => Number(p.id) === numericId) ||
+      myProjects.find((p) => Number(p.id) === numericId);
+
+    if (!found) {
+      throw new ApiClientError("Project not found", 404);
+    }
+
+    return {
+      success: true,
+      project: found,
+      isOwner: myProjectIds.has(numericId),
+    };
+  },
 
   createProject: (payload: {
     title: string;
@@ -374,7 +418,16 @@ export const teamService = {
     http.get<ApiResponse<Team[]>>(API_ENDPOINTS.TEAMS.BASE),
 
   getTeamById: (teamId: number | string) =>
-    http.get<ApiResponse<Team>>(API_ENDPOINTS.TEAMS.BY_ID(teamId)),
+    http.get<{
+      success: boolean;
+      message?: string;
+      data?: {
+        team: Team;
+        members: TeamMember[];
+      };
+      team?: Team;
+      members?: TeamMember[];
+    }>(API_ENDPOINTS.TEAMS.BY_ID(teamId)),
 
   createTeam: (payload: { project_id: number; team_name: string }) =>
     http.post<ApiResponse<Team>>(API_ENDPOINTS.TEAMS.BASE, payload),
@@ -387,11 +440,17 @@ export const teamService = {
 
   removeTeamMember: (teamId: number | string, userId: number | string) =>
     http.delete<ApiResponse>(
-      API_ENDPOINTS.TEAMS.REMOVE_MEMBER(teamId, userId)
+      API_ENDPOINTS.TEAMS.REMOVE_MEMBER(teamId, userId),
+      {
+        data: { team_id: Number(teamId), user_id: Number(userId) },
+      }
     ),
 
   assignTeamLead: (teamId: number | string, userId: number | string) =>
-    http.put<ApiResponse>(API_ENDPOINTS.TEAMS.ASSIGN_LEAD(teamId, userId)),
+    http.put<ApiResponse>(API_ENDPOINTS.TEAMS.ASSIGN_LEAD(teamId, userId), {
+      team_id: Number(teamId),
+      new_lead_user_id: Number(userId),
+    }),
 };
 
 // ============================================================================

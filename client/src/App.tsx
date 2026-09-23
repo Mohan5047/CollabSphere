@@ -99,37 +99,15 @@ const LandingPage = lazy(() =>
   })
 );
 
-const LoginPage = createLazyPlaceholder(
-  "Sign In to CollabSphere",
-  "Authenticate with your student, team lead, or admin account."
-);
-
-const RegisterPage = createLazyPlaceholder(
-  "Create Your CollabSphere Account",
-  "Join projects, collaborate with teams, and start learning tracks."
-);
+const LoginPage = lazy(() => import("./pages/auth/Login"));
+const RegisterPage = lazy(() => import("./pages/auth/Register"));
 
 // Protected Pages (Lazy Loaded)
-const DashboardPage = createLazyPlaceholder(
-  "Dashboard",
-  "Overview of your projects, courses, recent quizzes, and certificates."
-);
-const ProjectsPage = createLazyPlaceholder(
-  "Projects",
-  "Discover, create, and manage collaborative software projects."
-);
-const ProjectDetailsPage = createLazyPlaceholder(
-  "Project Details",
-  "Detailed view of project specifications, teams, and applications."
-);
-const TeamsPage = createLazyPlaceholder(
-  "Teams",
-  "Manage project teams, team leads, and member collaboration."
-);
-const TeamDetailsPage = createLazyPlaceholder(
-  "Team Workspace",
-  "Team members, tasks, shared files, and activity logs."
-);
+const DashboardPage = lazy(() => import("./pages/Dashboard"));
+const ProjectsPage = lazy(() => import("./pages/Projects"));
+const ProjectDetailsPage = lazy(() => import("./pages/ProjectDetails"));
+const TeamsPage = lazy(() => import("./pages/Teams"));
+const TeamDetailsPage = lazy(() => import("./pages/TeamDetails"));
 const TasksPage = createLazyPlaceholder(
   "Tasks",
   "Track TODO, IN_PROGRESS, and COMPLETED tasks across your teams."

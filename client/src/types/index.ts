@@ -30,9 +30,10 @@ export interface Project {
   title: string;
   description: string;
   tech_stack: string;
-  owner_id: number;
+  owner_id?: number;
   owner_name?: string;
   owner_email?: string;
+  status?: string;
   created_at?: string;
 }
 
@@ -40,14 +41,18 @@ export interface Team {
   id: number;
   project_id: number;
   team_name: string;
+  description?: string;
   project_title?: string;
   owner_id?: number;
+  member_count?: number;
+  members?: TeamMember[];
   created_at?: string;
 }
 
 export interface TeamMember {
-  id: number;
-  team_id: number;
+  id?: number;
+  member_id?: number;
+  team_id?: number;
   user_id: number;
   role: string;
   joined_at?: string;
@@ -63,7 +68,9 @@ export interface Application {
   message?: string;
   full_name?: string;
   email?: string;
+  title?: string;
   project_title?: string;
+  applied_at?: string;
   created_at?: string;
 }
 
