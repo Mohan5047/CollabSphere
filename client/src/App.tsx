@@ -5,9 +5,7 @@ import {
   Route,
   Outlet,
   Link,
-  useParams,
 } from "react-router-dom";
-import Chat from "./chat";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Navbar from "./components/Navbar";
@@ -15,43 +13,7 @@ import Sidebar from "./components/Sidebar";
 
 // ============================================================================
 // LAZY-LOADED PAGE IMPORTS
-// Replace each placeholder factory with the direct import as pages are built:
-// e.g. const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 // ============================================================================
-
-const createLazyPlaceholder = (title: string, subtitle: string) =>
-  lazy(() =>
-    Promise.resolve({
-      default: () => {
-        const params = useParams();
-        return (
-          <div className="page-content">
-            <div className="page-header">
-              <div className="page-title-group">
-                <h1>{title}</h1>
-                <p>{subtitle}</p>
-              </div>
-              <span className="badge badge-primary">Module Ready</span>
-            </div>
-
-            <div className="card">
-              <h3>{title} Workspace</h3>
-              <p style={{ marginTop: "0.5rem" }}>
-                This route is configured and protected inside{" "}
-                <code>src/App.tsx</code>. Replace this lazy placeholder with the
-                dedicated page component in <code>src/pages/</code>.
-              </p>
-              {Object.keys(params).length > 0 && (
-                <div style={{ marginTop: "1rem" }}>
-                  <code>Route Params: {JSON.stringify(params)}</code>
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      },
-    })
-  );
 
 // Public Pages
 const LandingPage = lazy(() =>
@@ -115,41 +77,11 @@ const CourseDetailsPage = lazy(() => import("./pages/CourseDetails"));
 const QuizPage = lazy(() => import("./pages/Quiz"));
 const CertificatesPage = lazy(() => import("./pages/Certificates"));
 const NotificationsPage = lazy(() => import("./pages/Notifications"));
-const FilesPage = createLazyPlaceholder(
-  "File Sharing",
-  "Upload, list, download, and manage shared team files (up to 10 MB)."
-);
-const ActivityPage = createLazyPlaceholder(
-  "Activity Timeline",
-  "Audit trail of user, team, and project actions in real time."
-);
-const AiAssistantPage = createLazyPlaceholder(
-  "CollabSphere AI Assistant",
-  "Get intelligent help breaking down tasks, planning sprints, and learning."
-);
-const ProfilePage = createLazyPlaceholder(
-  "User Profile",
-  "Manage your personal profile, role details, and account settings."
-);
-
-// Preserve existing real-time Chat component inside the /chat route
-const ChatPage = lazy(() =>
-  Promise.resolve({
-    default: () => (
-      <div className="page-content">
-        <div className="page-header">
-          <div className="page-title-group">
-            <h1>Real-Time Chat</h1>
-            <p>Instant direct messaging powered by Socket.IO</p>
-          </div>
-        </div>
-        <div className="card" style={{ display: "flex", justifyContent: "center" }}>
-          <Chat currentUserId={1} receiverId={2} />
-        </div>
-      </div>
-    ),
-  })
-);
+const FilesPage = lazy(() => import("./pages/Files"));
+const ActivityPage = lazy(() => import("./pages/Activity"));
+const AiAssistantPage = lazy(() => import("./pages/AIAssistant"));
+const ChatPage = lazy(() => import("./pages/Chat"));
+const ProfilePage = lazy(() => import("./pages/Profile"));
 
 // ============================================================================
 // REUSABLE LOADING FALLBACK

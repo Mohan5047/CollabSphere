@@ -73,8 +73,8 @@ const Certificates: React.FC = () => {
       ]);
 
       if (certsRes.status === "fulfilled") {
-        const list = Array.isArray(certsRes.value.data?.data)
-          ? certsRes.value.data.data
+        const list = Array.isArray(certsRes.value.data)
+          ? certsRes.value.data
           : [];
         setCertificates(list);
       } else {
@@ -82,15 +82,15 @@ const Certificates: React.FC = () => {
       }
 
       if (enrolledRes.status === "fulfilled") {
-        const enrolledList = Array.isArray(enrolledRes.value.data?.data)
-          ? enrolledRes.value.data.data
+        const enrolledList = Array.isArray(enrolledRes.value.data)
+          ? enrolledRes.value.data
           : [];
         setEnrolledCourses(enrolledList);
       }
 
       if (coursesRes.status === "fulfilled") {
-        const courseList = Array.isArray(coursesRes.value.data?.data)
-          ? coursesRes.value.data.data
+        const courseList = Array.isArray(coursesRes.value.data)
+          ? coursesRes.value.data
           : [];
         const map: Record<number, Course> = {};
         courseList.forEach((c) => {
@@ -161,8 +161,8 @@ const Certificates: React.FC = () => {
 
     try {
       const res = await certificateService.verifyCertificate(codeToVerify);
-      if (res.data?.data) {
-        setVerifiedRecord(res.data.data);
+      if (res.data) {
+        setVerifiedRecord(res.data);
       } else {
         setVerifyError("No matching certificate found for this ID.");
       }
@@ -183,7 +183,7 @@ const Certificates: React.FC = () => {
         user_id: user.id,
         course_id: courseId,
       });
-      const newCert = res.data?.data;
+      const newCert = res.data;
       setClaimFeedback({
         type: "success",
         message: "Certificate issued and verified on your profile!",

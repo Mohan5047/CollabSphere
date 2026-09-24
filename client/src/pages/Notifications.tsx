@@ -47,7 +47,7 @@ const Notifications: React.FC = () => {
 
     try {
       const res = await notificationService.getUserNotifications(user.id);
-      const items = Array.isArray(res.data?.data) ? res.data.data : [];
+      const items = Array.isArray(res.data) ? res.data : [];
       setNotifications(items);
     } catch (err) {
       setError(getErrorMessage(err));
@@ -67,7 +67,7 @@ const Notifications: React.FC = () => {
 
     try {
       const res = await notificationService.markAsRead(notification.id);
-      const updated = res.data?.data;
+      const updated = res.data;
       setNotifications((prev) =>
         prev.map((item) =>
           item.id === notification.id

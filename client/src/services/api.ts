@@ -1,11 +1,11 @@
 import axios, {
   AxiosError,
-  AxiosInstance,
-  AxiosRequestConfig,
-  AxiosResponse,
-  InternalAxiosRequestConfig,
+  type AxiosInstance,
+  type AxiosRequestConfig,
+  type AxiosResponse,
+  type InternalAxiosRequestConfig,
 } from "axios";
-import {
+import type {
   Activity,
   ApiResponse,
   Application,
@@ -23,12 +23,24 @@ import {
   Project,
   Quiz,
   QuizAttempt,
+  QuizQuestion,
   Task,
   TaskPriority,
   TaskStatus,
   Team,
+  TeamMember,
   User,
 } from "../types";
+
+export const getErrorMessage = (error: unknown): string => {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  if (typeof error === "string" && error.trim()) {
+    return error;
+  }
+  return "An unexpected error occurred. Please try again.";
+};
 
 // ============================================================================
 // CONFIGURATION & STORAGE KEYS
@@ -157,6 +169,7 @@ export const API_ENDPOINTS = {
     CHAT: "/api/ai/chat",
   },
   MESSAGES: {
+    USERS: (userId: number | string) => `/api/messages/users/${userId}`,
     HISTORY: (senderId: number | string, receiverId: number | string) =>
       `/api/messages/${senderId}/${receiverId}`,
   },
@@ -451,6 +464,16 @@ export const teamService = {
       team_id: Number(teamId),
       new_lead_user_id: Number(userId),
     }),
+
+  getTeamMembers: async (teamId: number | string): Promise<ApiResponse<TeamMember[]>> => {
+    const res = await teamService.getTeamById(teamId);
+    const members = res.data?.members || res.members || [];
+    return {
+      success: true,
+      count: members.length,
+      data: members,
+    };
+  },
 };
 
 // ============================================================================
@@ -498,6 +521,11 @@ export const applicationService = {
       API_ENDPOINTS.APPLICATIONS.BASE
     ),
 
+  getMyApplications: () =>
+    http.get<ApiResponse<Application[]> & { applications?: Application[] }>(
+      API_ENDPOINTS.APPLICATIONS.BASE
+    ),
+
   applyToProject: (payload: { project_id: number; message?: string }) =>
     http.post<ApiResponse<Application>>(
       API_ENDPOINTS.APPLICATIONS.BASE,
@@ -525,6 +553,11 @@ export const learningService = {
     http.get<ApiResponse<LearningTrack[]>>(API_ENDPOINTS.LEARNING.TRACKS),
 
   getCourses: () =>
+    http.get<ApiResponse<Course[]> & { courses?: Course[] }>(
+      API_ENDPOINTS.LEARNING.COURSES
+    ),
+
+  getAllCourses: () =>
     http.get<ApiResponse<Course[]> & { courses?: Course[] }>(
       API_ENDPOINTS.LEARNING.COURSES
     ),
@@ -574,7 +607,9 @@ export const learningService = {
     http.post<ApiResponse>(API_ENDPOINTS.LEARNING.ENROLLMENTS, payload),
 
   getUserEnrollments: (userId: number | string) =>
-    http.get<ApiResponse>(API_ENDPOINTS.LEARNING.USER_ENROLLMENTS(userId)),
+    http.get<ApiResponse<Course[]>>(
+      API_ENDPOINTS.LEARNING.USER_ENROLLMENTS(userId)
+    ),
 };
 
 // ============================================================================
@@ -592,10 +627,12 @@ export const quizService = {
     http.post<ApiResponse<Quiz>>(API_ENDPOINTS.QUIZZES.BASE, payload),
 
   getQuizQuestions: () =>
-    http.get<ApiResponse>(API_ENDPOINTS.QUIZZES.QUESTIONS),
+    http.get<ApiResponse<QuizQuestion[]>>(API_ENDPOINTS.QUIZZES.QUESTIONS),
 
   getQuestionsByQuiz: (quizId: number | string) =>
-    http.get<ApiResponse>(`${API_ENDPOINTS.QUIZZES.QUESTIONS}/quiz/${quizId}`),
+    http.get<ApiResponse<QuizQuestion[]>>(
+      `${API_ENDPOINTS.QUIZZES.QUESTIONS}/quiz/${quizId}`
+    ),
 
   getQuizAttempts: () =>
     http.get<ApiResponse<QuizAttempt[]>>(API_ENDPOINTS.QUIZZES.ATTEMPTS),
@@ -627,6 +664,18 @@ export const progressService = {
 
   getUserProgress: (userId: number | string) =>
     http.get<ApiResponse>(API_ENDPOINTS.PROGRESS.USER(userId)),
+
+  getUserEnrolledCourses: async (
+    userId: number | string
+  ): Promise<ApiResponse<Course[]>> => {
+    const dash = await userService.getDashboard(userId);
+    const courses = dash.courses || dash.data?.courses || [];
+    return {
+      success: true,
+      count: courses.length,
+      data: courses,
+    };
+  },
 
   updateProgress: (payload: {
     user_id: number;
@@ -715,19 +764,36 @@ export const notificationService = {
 // ============================================================================
 
 export const fileService = {
-  uploadFile: (teamId: number | string, file: File) => {
+  uploadFile: (
+    teamId: number | string,
+    file: File,
+    onUploadProgress?: (progressPercent: number) => void
+  ) => {
     const formData = new FormData();
     formData.append("team_id", String(teamId));
     formData.append("file", file);
 
     return http.post<ApiResponse<FileItem>>(
       API_ENDPOINTS.FILES.UPLOAD,
-      formData
+      formData,
+      {
+        onUploadProgress: (progressEvent) => {
+          if (onUploadProgress && progressEvent.total) {
+            const percent = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            onUploadProgress(percent);
+          }
+        },
+      }
     );
   },
 
   getTeamFiles: (teamId: number | string) =>
     http.get<ApiResponse<FileItem[]>>(API_ENDPOINTS.FILES.BY_TEAM(teamId)),
+
+  getFileDownloadUrl: (fileId: number | string): string =>
+    `${API_BASE_URL}${API_ENDPOINTS.FILES.DOWNLOAD(fileId)}`,
 
   downloadFile: async (
     fileId: number | string,
@@ -782,7 +848,19 @@ export const aiService = {
     }),
 };
 
+export interface ChatContact {
+  id: number;
+  full_name: string;
+  email: string;
+  role?: string;
+  team_id?: number;
+  team_name?: string;
+}
+
 export const messageService = {
+  getChatUsers: (userId: number | string) =>
+    http.get<ApiResponse<ChatContact[]>>(API_ENDPOINTS.MESSAGES.USERS(userId)),
+
   getHistory: (senderId: number | string, receiverId: number | string) =>
     http.get<ApiResponse<ChatMessage[]>>(
       API_ENDPOINTS.MESSAGES.HISTORY(senderId, receiverId)

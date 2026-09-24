@@ -15,8 +15,8 @@ import {
   XCircle,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { quizService } from "../services/api";
-import { Quiz as QuizType, QuizAttempt, QuizQuestion } from "../types";
+import { learningService, quizService } from "../services/api";
+import type { Quiz as QuizType, QuizAttempt, QuizQuestion } from "../types";
 
 type OptionKey = "A" | "B" | "C" | "D";
 
@@ -39,6 +39,7 @@ const Quiz: React.FC = () => {
   const isInvalidId = !id || Number.isNaN(numericQuizId) || numericQuizId <= 0;
 
   const [quiz, setQuiz] = useState<QuizType | null>(null);
+  const [resolvedCourseId, setResolvedCourseId] = useState<number | null>(null);
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [attemptsHistory, setAttemptsHistory] = useState<QuizAttempt[]>([]);
 
@@ -69,19 +70,23 @@ const Quiz: React.FC = () => {
     setError(null);
 
     try {
-      const [quizRes, questionsRes, attemptsRes] = await Promise.allSettled([
-        quizService.getQuizById(numericQuizId),
-        quizService.getQuestionsByQuiz(numericQuizId),
-        user?.id
-          ? quizService.getUserQuizAttempts(user.id)
-          : Promise.resolve(null),
-      ]);
+      const [quizRes, questionsRes, modulesRes, attemptsRes] =
+        await Promise.allSettled([
+          quizService.getQuizById(numericQuizId),
+          quizService.getQuestionsByQuiz(numericQuizId),
+          learningService.getModules(),
+          user?.id
+            ? quizService.getUserQuizAttempts(user.id)
+            : Promise.resolve(null),
+        ]);
 
+      let loadedQuiz: QuizType | null = null;
       if (quizRes.status === "fulfilled") {
         const foundQuiz = quizRes.value.data || quizRes.value.quiz;
         if (!foundQuiz) {
           throw new Error("Quiz not found.");
         }
+        loadedQuiz = foundQuiz;
         setQuiz(foundQuiz);
       } else {
         throw new Error(
@@ -89,22 +94,40 @@ const Quiz: React.FC = () => {
         );
       }
 
+      // Resolve parent course_id from quiz.course_id or via quiz.module_id -> module.course_id
+      if (loadedQuiz.course_id) {
+        setResolvedCourseId(Number(loadedQuiz.course_id));
+      } else if (
+        loadedQuiz.module_id &&
+        modulesRes.status === "fulfilled" &&
+        Array.isArray(modulesRes.value.data)
+      ) {
+        const matchedModule = modulesRes.value.data.find(
+          (m) => Number(m.id) === Number(loadedQuiz?.module_id)
+        );
+        if (matchedModule?.course_id) {
+          setResolvedCourseId(Number(matchedModule.course_id));
+        }
+      }
+
       if (questionsRes.status === "fulfilled") {
         const rawQuestions: QuizQuestion[] = Array.isArray(
           questionsRes.value.data
         )
-          ? (questionsRes.value.data as QuizQuestion[])
+          ? questionsRes.value.data
           : [];
-        // Strip any accidental correct_option property in client state before submission
-        const sanitized = rawQuestions.map((q) => ({
+        // Map backend `question` column or `question_text` cleanly and strip any `correct_option`
+        const sanitized: QuizQuestion[] = rawQuestions.map((q) => ({
           id: Number(q.id),
           quiz_id: Number(q.quiz_id),
-          question_text: q.question_text,
+          question_text:
+            q.question_text || q.question || `Question #${q.id}`,
+          question: q.question || q.question_text,
           option_a: q.option_a,
           option_b: q.option_b,
           option_c: q.option_c,
           option_d: q.option_d,
-          marks: q.marks,
+          marks: q.marks !== undefined ? Number(q.marks) : 1,
         }));
         setQuestions(sanitized);
       }
@@ -183,7 +206,10 @@ const Quiz: React.FC = () => {
 
       const resultData = res.result || res.data;
       if (resultData) {
-        setSubmissionResult(resultData);
+        setSubmissionResult({
+          ...resultData,
+          quiz_id: numericQuizId,
+        });
       } else {
         setSubmissionResult({
           quiz_id: numericQuizId,
@@ -217,6 +243,12 @@ const Quiz: React.FC = () => {
     setSubmitError(null);
     setCurrentIndex(0);
   };
+
+  const backCourseUrl = resolvedCourseId
+    ? `/learning/${resolvedCourseId}`
+    : quiz?.course_id
+    ? `/learning/${quiz.course_id}`
+    : "/learning";
 
   if (loading) {
     return (
@@ -265,7 +297,7 @@ const Quiz: React.FC = () => {
       {/* Back Link */}
       <div style={{ marginBottom: "1rem" }}>
         <Link
-          to={quiz.course_id ? `/learning/${quiz.course_id}` : "/learning"}
+          to={backCourseUrl}
           className="btn btn-ghost btn-sm"
           style={{ paddingLeft: "0.5rem" }}
         >
@@ -294,9 +326,15 @@ const Quiz: React.FC = () => {
                 alignItems: "center",
                 gap: "0.5rem",
                 marginBottom: "0.45rem",
+                flexWrap: "wrap",
               }}
             >
               <span className="badge badge-primary">Quiz #{quiz.id}</span>
+              {quiz.module_title && (
+                <span className="badge badge-secondary">
+                  {quiz.module_title}
+                </span>
+              )}
               <span className="badge badge-neutral">
                 {questions.length}{" "}
                 {questions.length === 1 ? "Question" : "Questions"}
@@ -306,9 +344,33 @@ const Quiz: React.FC = () => {
                   Total Marks: {quiz.total_marks}
                 </span>
               )}
+              {quiz.time_limit_minutes !== undefined && (
+                <span
+                  className="badge badge-neutral"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.25rem",
+                  }}
+                >
+                  <Clock size={12} />
+                  {quiz.time_limit_minutes} mins
+                </span>
+              )}
             </div>
 
             <h1 style={{ fontSize: "1.6rem" }}>{quiz.title}</h1>
+            {quiz.description && (
+              <p
+                style={{
+                  marginTop: "0.35rem",
+                  color: "var(--text-muted)",
+                  fontSize: "0.9rem",
+                }}
+              >
+                {quiz.description}
+              </p>
+            )}
           </div>
 
           <div style={{ textAlign: "right" }}>
@@ -411,12 +473,7 @@ const Quiz: React.FC = () => {
               <span>Retake Quiz</span>
             </button>
 
-            <Link
-              to={
-                quiz.course_id ? `/learning/${quiz.course_id}` : "/certificates"
-              }
-              className="btn btn-primary"
-            >
+            <Link to={backCourseUrl} className="btn btn-primary">
               <span>Return to Course</span>
               <ArrowRight size={16} />
             </Link>
@@ -426,7 +483,10 @@ const Quiz: React.FC = () => {
         /* ================================================================= */
         /* ACTIVE QUIZ QUESTION & PALETTE                                    */
         /* ================================================================= */
-        <div className="grid-2" style={{ marginBottom: "1.75rem", alignItems: "start" }}>
+        <div
+          className="grid-2"
+          style={{ marginBottom: "1.75rem", alignItems: "start" }}
+        >
           {/* Question Card */}
           <div className="card">
             {submitError && (
@@ -491,7 +551,7 @@ const Quiz: React.FC = () => {
                     marginBottom: "1.35rem",
                   }}
                 >
-                  {activeQuestion.question_text}
+                  {activeQuestion.question_text || activeQuestion.question}
                 </h3>
 
                 {/* Multiple Choice Options */}
@@ -518,7 +578,6 @@ const Quiz: React.FC = () => {
                       <button
                         key={opt.key}
                         type="button"
-                        disabled={isSubmitting}
                         onClick={() =>
                           handleSelectOption(activeQuestion.id, opt.key)
                         }
@@ -526,18 +585,18 @@ const Quiz: React.FC = () => {
                           display: "flex",
                           alignItems: "center",
                           gap: "0.85rem",
-                          padding: "0.95rem 1.1rem",
+                          padding: "0.9rem 1rem",
                           borderRadius: "var(--radius-md)",
                           border: isSelected
-                            ? "2px solid var(--primary)"
+                            ? "1.5px solid var(--primary)"
                             : "1px solid var(--border)",
                           backgroundColor: isSelected
                             ? "var(--primary-muted)"
                             : "var(--surface)",
                           color: "var(--text)",
                           textAlign: "left",
-                          cursor: isSubmitting ? "not-allowed" : "pointer",
-                          transition: "all 0.15s ease",
+                          cursor: "pointer",
+                          transition: "all var(--transition-fast)",
                         }}
                       >
                         <span
@@ -548,18 +607,21 @@ const Quiz: React.FC = () => {
                             display: "inline-flex",
                             alignItems: "center",
                             justifyContent: "center",
+                            fontSize: "0.8rem",
                             fontWeight: 700,
-                            fontSize: "0.825rem",
+                            flexShrink: 0,
                             backgroundColor: isSelected
                               ? "var(--primary)"
-                              : "var(--bg-elevated)",
-                            color: isSelected ? "#ffffff" : "var(--text-muted)",
-                            flexShrink: 0,
+                              : "var(--card)",
+                            color: isSelected ? "#fff" : "var(--text-secondary)",
+                            border: isSelected
+                              ? "none"
+                              : "1px solid var(--border)",
                           }}
                         >
                           {opt.key}
                         </span>
-                        <span style={{ fontSize: "0.925rem", fontWeight: 500 }}>
+                        <span style={{ fontSize: "0.925rem", lineHeight: 1.4 }}>
                           {opt.text}
                         </span>
                       </button>
@@ -567,61 +629,56 @@ const Quiz: React.FC = () => {
                   })}
                 </div>
 
-                {/* Previous / Next / Submit Navigation */}
+                {/* Prev / Next Controls */}
                 <div
                   style={{
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
-                    gap: "0.75rem",
                     paddingTop: "1rem",
                     borderTop: "1px solid var(--border)",
                   }}
                 >
                   <button
                     type="button"
-                    className="btn btn-secondary"
-                    disabled={currentIndex === 0 || isSubmitting}
+                    className="btn btn-secondary btn-sm"
+                    disabled={currentIndex === 0}
                     onClick={() =>
                       setCurrentIndex((prev) => Math.max(0, prev - 1))
                     }
                   >
-                    <ArrowLeft size={16} />
+                    <ArrowLeft size={15} />
                     <span>Previous</span>
                   </button>
 
                   {currentIndex < questions.length - 1 ? (
                     <button
                       type="button"
-                      className="btn btn-primary"
-                      disabled={isSubmitting}
+                      className="btn btn-primary btn-sm"
                       onClick={() =>
                         setCurrentIndex((prev) =>
                           Math.min(questions.length - 1, prev + 1)
                         )
                       }
                     >
-                      <span>Next Question</span>
-                      <ArrowRight size={16} />
+                      <span>Next</span>
+                      <ArrowRight size={15} />
                     </button>
                   ) : (
                     <button
                       type="button"
-                      className="btn btn-primary"
-                      disabled={isSubmitting || answeredCount === 0}
+                      className="btn btn-primary btn-sm"
+                      disabled={isSubmitting}
                       onClick={() => void handleSubmitQuiz()}
                     >
                       {isSubmitting ? (
                         <>
-                          <Loader2
-                            size={16}
-                            style={{ animation: "spin 0.8s linear infinite" }}
-                          />
+                          <Loader2 size={15} className="spin" />
                           <span>Submitting...</span>
                         </>
                       ) : (
                         <>
-                          <Send size={16} />
+                          <Send size={15} />
                           <span>Submit Quiz</span>
                         </>
                       )}
@@ -636,13 +693,40 @@ const Quiz: React.FC = () => {
           <div className="card">
             <div className="card-header">
               <div>
-                <h3 style={{ fontSize: "1.1rem" }}>Question Navigator</h3>
-                <p style={{ fontSize: "0.825rem", marginTop: "0.15rem" }}>
-                  {answeredCount} of {questions.length} questions answered
+                <h3 className="card-title">Assessment Navigator</h3>
+                <p className="card-subtitle">
+                  {answeredCount} of {questions.length} answered
                 </p>
               </div>
             </div>
 
+            {/* Progress Bar */}
+            <div style={{ marginBottom: "1.25rem" }}>
+              <div
+                style={{
+                  width: "100%",
+                  height: "8px",
+                  borderRadius: "var(--radius-full)",
+                  backgroundColor: "var(--surface)",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    width: `${
+                      questions.length > 0
+                        ? Math.round((answeredCount / questions.length) * 100)
+                        : 0
+                    }%`,
+                    height: "100%",
+                    backgroundColor: "var(--primary)",
+                    transition: "width var(--transition-normal)",
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Question Number Grid */}
             <div
               style={{
                 display: "grid",
@@ -661,17 +745,20 @@ const Quiz: React.FC = () => {
                     type="button"
                     onClick={() => setCurrentIndex(idx)}
                     style={{
-                      height: "42px",
-                      borderRadius: "var(--radius-sm)",
+                      height: "38px",
+                      borderRadius: "var(--radius-md)",
+                      fontWeight: 600,
+                      fontSize: "0.85rem",
+                      cursor: "pointer",
                       border: isCurrent
                         ? "2px solid var(--primary)"
                         : "1px solid var(--border)",
                       backgroundColor: isAnswered
-                        ? "var(--primary)"
+                        ? "var(--primary-muted)"
                         : "var(--surface)",
-                      color: isAnswered ? "#ffffff" : "var(--text)",
-                      fontWeight: 600,
-                      cursor: "pointer",
+                      color: isAnswered
+                        ? "var(--primary)"
+                        : "var(--text-secondary)",
                     }}
                   >
                     {idx + 1}
@@ -683,26 +770,19 @@ const Quiz: React.FC = () => {
             <button
               type="button"
               className="btn btn-primary"
-              disabled={
-                isSubmitting || questions.length === 0 || answeredCount === 0
-              }
-              onClick={() => void handleSubmitQuiz()}
               style={{ width: "100%" }}
+              disabled={isSubmitting || questions.length === 0}
+              onClick={() => void handleSubmitQuiz()}
             >
               {isSubmitting ? (
                 <>
-                  <Loader2
-                    size={16}
-                    style={{ animation: "spin 0.8s linear infinite" }}
-                  />
-                  <span>Submitting Assessment...</span>
+                  <Loader2 size={16} className="spin" />
+                  <span>Grading Assessment...</span>
                 </>
               ) : (
                 <>
                   <CheckCircle2 size={16} />
-                  <span>
-                    Submit Quiz ({answeredCount}/{questions.length})
-                  </span>
+                  <span>Submit Final Answers</span>
                 </>
               )}
             </button>
@@ -711,82 +791,87 @@ const Quiz: React.FC = () => {
       )}
 
       {/* =================================================================== */}
-      {/* ATTEMPT HISTORY                                                     */}
+      {/* PREVIOUS ATTEMPTS HISTORY                                           */}
       {/* =================================================================== */}
       {attemptsHistory.length > 0 && (
         <div className="card">
           <div className="card-header">
             <div>
-              <h3 style={{ fontSize: "1.1rem" }}>
-                Your Previous Attempts ({attemptsHistory.length})
-              </h3>
-              <p style={{ fontSize: "0.825rem", marginTop: "0.15rem" }}>
-                Historical scores recorded for this assessment
+              <h3 className="card-title">Your Previous Attempts</h3>
+              <p className="card-subtitle">
+                Historical performance for this assessment
               </p>
             </div>
+            <span className="badge badge-neutral">
+              {attemptsHistory.length} Attempts
+            </span>
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "0.65rem",
-            }}
-          >
-            {attemptsHistory.map((attempt, index) => (
-              <div
-                key={attempt.attempt_id || attempt.id || index}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "0.85rem 1rem",
-                  borderRadius: "var(--radius-md)",
-                  backgroundColor: "var(--surface)",
-                  border: "1px solid var(--border)",
-                  flexWrap: "wrap",
-                  gap: "0.75rem",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.75rem",
-                  }}
-                >
-                  <Clock size={16} style={{ color: "var(--text-muted)" }} />
-                  <div>
-                    <div style={{ fontWeight: 600, color: "var(--text)" }}>
-                      Score: {attempt.score}
+          <div className="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Attempt</th>
+                  <th>Score</th>
+                  <th>Accuracy</th>
+                  <th>Result</th>
+                  <th>Completed Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {attemptsHistory.map((attempt, idx) => (
+                  <tr
+                    key={
+                      attempt.attempt_id ||
+                      attempt.id ||
+                      `${attempt.quiz_id}-${idx}`
+                    }
+                  >
+                    <td style={{ fontWeight: 600 }}>
+                      #{attempt.attempt_id || attempt.id || idx + 1}
+                    </td>
+                    <td>
+                      {attempt.score}
                       {attempt.total_marks !== undefined
                         ? ` / ${attempt.total_marks}`
-                        : ""}{" "}
-                      {attempt.percentage !== undefined
-                        ? `(${attempt.percentage}%)`
                         : ""}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "0.75rem",
-                        color: "var(--text-muted)",
-                      }}
-                    >
-                      Completed{" "}
-                      {formatDate(attempt.completed_at || attempt.attempted_at)}
-                    </div>
-                  </div>
-                </div>
-
-                <span
-                  className={`badge ${
-                    attempt.passed ? "badge-success" : "badge-danger"
-                  }`}
-                >
-                  {attempt.passed ? "PASSED" : "FAILED"}
-                </span>
-              </div>
-            ))}
+                    </td>
+                    <td>
+                      {attempt.percentage !== undefined
+                        ? `${attempt.percentage}%`
+                        : "—"}
+                    </td>
+                    <td>
+                      <span
+                        className={`badge ${
+                          attempt.passed ? "badge-success" : "badge-danger"
+                        }`}
+                      >
+                        {attempt.passed ? "PASSED" : "FAILED"}
+                      </span>
+                    </td>
+                    <td>
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.35rem",
+                          color: "var(--text-muted)",
+                          fontSize: "0.825rem",
+                        }}
+                      >
+                        <Clock size={12} />
+                        {formatDate(
+                          attempt.completed_at ||
+                            attempt.attempted_at ||
+                            attempt.created_at
+                        )}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}

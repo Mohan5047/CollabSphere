@@ -2,11 +2,20 @@
 // USER & AUTHENTICATION TYPES
 // ==========================================
 
-export type UserRole = "ADMIN" | "TEAM_LEAD" | "MEMBER" | "STUDENT" | "student" | "admin" | "team_lead" | "member";
+export type UserRole =
+  | "ADMIN"
+  | "TEAM_LEAD"
+  | "MEMBER"
+  | "STUDENT"
+  | "student"
+  | "admin"
+  | "team_lead"
+  | "member";
 
 export interface User {
   id: number;
   full_name: string;
+  name?: string;
   email: string;
   role: UserRole;
   profile_picture?: string | null;
@@ -41,6 +50,7 @@ export interface Team {
   id: number;
   project_id: number;
   team_name: string;
+  name?: string;
   description?: string;
   project_title?: string;
   owner_id?: number;
@@ -57,6 +67,7 @@ export interface TeamMember {
   role: string;
   joined_at?: string;
   full_name?: string;
+  name?: string;
   email?: string;
 }
 
@@ -107,6 +118,7 @@ export interface FileItem {
   original_name: string;
   stored_name?: string;
   file_path?: string;
+  file_url?: string;
   mime_type: string;
   file_size: string | number;
   created_at: string;
@@ -122,7 +134,9 @@ export interface Activity {
   team_id: number | null;
   project_id: number | null;
   activity_type: string;
+  action_type?: string;
   description: string;
+  action_description?: string;
   created_at: string;
   user_name?: string;
   user_email?: string;
@@ -149,6 +163,8 @@ export interface ChatMessage {
   message: string;
   is_read: boolean;
   created_at: string;
+  sender_name?: string;
+  receiver_name?: string;
 }
 
 // ==========================================
@@ -173,14 +189,22 @@ export interface LearningTrack {
 
 export interface Course {
   id: number;
+  course_id?: number;
+  enrollment_id?: number;
   track_id?: number;
   category_id?: number;
   title: string;
+  course_title?: string;
   description?: string;
   instructor?: string;
   duration?: string;
   level?: string;
   progress_percentage?: number;
+  completed_modules?: number;
+  completed_lessons?: number;
+  progress_status?: string;
+  last_accessed?: string;
+  enrolled_at?: string;
   created_at?: string;
 }
 
@@ -208,7 +232,14 @@ export interface Lesson {
 export interface LessonResource {
   id: number;
   lesson_id: number;
-  resource_type: "VIDEO" | "PDF" | "NOTES" | "CODE" | "LINK" | "YOUTUBE" | string;
+  resource_type:
+    | "VIDEO"
+    | "PDF"
+    | "NOTES"
+    | "CODE"
+    | "LINK"
+    | "YOUTUBE"
+    | string;
   title?: string;
   resource_url: string;
   description?: string;
@@ -217,12 +248,16 @@ export interface LessonResource {
 
 export interface Quiz {
   id: number;
-  course_id: number;
+  course_id?: number;
+  module_id?: number;
+  module_title?: string;
   title: string;
   description?: string;
   total_marks?: number;
   passing_marks?: number;
   passing_score?: number;
+  time_limit_minutes?: number;
+  is_active?: boolean;
   created_at?: string;
 }
 
@@ -230,6 +265,7 @@ export interface QuizQuestion {
   id: number;
   quiz_id: number;
   question_text: string;
+  question?: string;
   option_a: string;
   option_b: string;
   option_c: string;
@@ -247,6 +283,7 @@ export interface QuizAttempt {
   total_marks?: number;
   percentage?: number;
   passed: boolean;
+  started_at?: string;
   completed_at?: string;
   attempted_at?: string;
   created_at?: string;
@@ -296,4 +333,13 @@ export interface ApiResponse<T = unknown> {
   message?: string;
   count?: number;
   data?: T;
+  quiz?: T;
+  course?: T;
+  team?: T;
+  teams?: T;
+  tasks?: T;
+  files?: T;
+  activities?: T;
+  applications?: T;
+  projects?: T;
 }
