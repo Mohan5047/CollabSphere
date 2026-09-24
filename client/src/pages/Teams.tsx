@@ -20,7 +20,7 @@ import {
   projectService,
   teamService,
 } from "../services/api";
-import { Project, Team, TeamMember } from "../types";
+import type { Project, Team, TeamMember } from "../types";
 
 type TeamTab = "all" | "my_teams";
 

@@ -10,7 +10,6 @@ import {
   Code2,
   Edit3,
   FileText,
-  FolderKanban,
   ListTodo,
   Loader2,
   Plus,
@@ -30,7 +29,7 @@ import {
   taskService,
   teamService,
 } from "../services/api";
-import {
+import type {
   Activity,
   Application,
   FileItem,

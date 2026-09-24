@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { applicationService, projectService } from "../services/api";
-import { Application, Project } from "../types";
+import type { Application, Project } from "../types";
 
 const formatDate = (isoString?: string | null): string => {
   if (!isoString) return "Recently";

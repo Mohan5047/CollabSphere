@@ -13,7 +13,7 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import { UserRole } from "../../types";
+import type { UserRole } from "../../types";
 
 const ROLE_OPTIONS: { value: UserRole; label: string; description: string }[] =
   [

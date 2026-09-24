@@ -29,7 +29,7 @@ import {
   taskService,
   teamService,
 } from "../services/api";
-import {
+import type {
   Activity,
   FileItem,
   Project,
@@ -888,7 +888,7 @@ const TeamDetails: React.FC = () => {
             >
               {files.map((file) => {
                 const downloadUrl = fileService.getFileDownloadUrl(
-                  file.file_url
+                  file.file_url || file.id
                 );
                 return (
                   <div
@@ -917,7 +917,7 @@ const TeamDetails: React.FC = () => {
                           color: "var(--text-muted)",
                         }}
                       >
-                        {formatFileSize(file.file_size)} · Uploaded{" "}
+                        {formatFileSize(Number(file.file_size || 0))} · Uploaded{" "}
                         {formatDate(file.created_at)}
                       </span>
                     </div>

@@ -23,7 +23,7 @@ import {
   teamService,
   userService,
 } from "../services/api";
-import {
+import type {
   Activity,
   DashboardData,
   Project,
@@ -862,7 +862,7 @@ const Dashboard: React.FC = () => {
                         {course.completed_modules} modules ·{" "}
                         {course.completed_lessons} lessons completed
                       </span>
-                      <span>{course.progress_status.replace("_", " ")}</span>
+                      <span>{(course.progress_status || "IN_PROGRESS").replace("_", " ")}</span>
                     </div>
                   </div>
                 );

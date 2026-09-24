@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { projectService, taskService, teamService } from "../services/api";
-import {
+import type {
   Project,
   Task,
   TaskPriority,
@@ -49,7 +49,7 @@ const Tasks: React.FC = () => {
   const { user } = useAuth();
 
   const [teams, setTeams] = useState<Team[]>([]);
-  const [projectsMap, setProjectsMap] = useState<Map<number, Project>>(
+  const [, setProjectsMap] = useState<Map<number, Project>>(
     new Map()
   );
   const [teamMembersMap, setTeamMembersMap] = useState<

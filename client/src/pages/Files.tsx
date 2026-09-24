@@ -943,7 +943,7 @@ const Files: React.FC = () => {
                           fontWeight: 600,
                         }}
                       >
-                        {formatFileSize(file.file_size)}
+                        {formatFileSize(Number(file.file_size || 0))}
                       </span>
                     </div>
 

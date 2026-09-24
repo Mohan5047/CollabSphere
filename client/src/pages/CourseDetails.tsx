@@ -3,11 +3,9 @@ import { Link, useParams } from "react-router-dom";
 import {
   AlertCircle,
   ArrowLeft,
-  Award,
   BookOpen,
   CheckCircle2,
   ChevronRight,
-  Code2,
   ExternalLink,
   FileCode,
   FileText,
@@ -28,7 +26,7 @@ import {
   quizService,
   userService,
 } from "../services/api";
-import {
+import type {
   Course,
   CourseModule,
   Lesson,
@@ -200,7 +198,11 @@ const CourseDetails: React.FC = () => {
           ? quizzesRes.value.data
           : [];
         setCourseQuizzes(
-          allQuizzes.filter((q) => Number(q.course_id) === numericCourseId)
+          allQuizzes.filter(
+            (q) =>
+              Number(q.course_id) === numericCourseId ||
+              moduleIds.has(Number(q.module_id))
+          )
         );
       }
 

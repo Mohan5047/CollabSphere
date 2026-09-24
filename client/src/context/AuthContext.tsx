@@ -12,7 +12,7 @@ import {
   setAuthToken,
   ApiClientError,
 } from "../services/api";
-import { AuthResponse, User, UserRole } from "../types";
+import type { AuthResponse, User, UserRole } from "../types";
 
 // ============================================================================
 // STORAGE KEYS & JWT HELPER
@@ -114,6 +114,7 @@ export interface AuthContextValue {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  loading: boolean;
   error: string | null;
   login: (credentials: LoginCredentials) => Promise<AuthResponse>;
   register: (data: RegisterData) => Promise<AuthResponse>;
@@ -341,6 +342,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       token,
       isAuthenticated,
       isLoading,
+      loading: isLoading,
       error,
       login,
       register,

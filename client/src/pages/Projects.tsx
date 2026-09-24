@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { projectService, teamService } from "../services/api";
-import { Project, Team } from "../types";
+import type { Project, Team } from "../types";
 
 type FilterMode = "all" | "mine" | "with_teams";
 

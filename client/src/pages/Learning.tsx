@@ -6,11 +6,9 @@ import {
   Award,
   BookOpen,
   CheckCircle2,
-  Clock,
   Compass,
   Filter,
   GraduationCap,
-  Layers,
   Loader2,
   PlayCircle,
   RefreshCw,
@@ -20,7 +18,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { learningService, userService } from "../services/api";
-import {
+import type {
   Course,
   DashboardData,
   LearningCategory,
@@ -110,7 +108,7 @@ const Learning: React.FC = () => {
         (dash.courses || []).forEach((c) => {
           eMap.set(Number(c.course_id), {
             course_id: Number(c.course_id),
-            course_title: c.course_title,
+            course_title: c.course_title || c.title || "",
             progress_percentage: Number(c.progress_percentage || 0),
             progress_status: c.progress_status || "IN_PROGRESS",
             completed_modules: Number(c.completed_modules || 0),
