@@ -16,6 +16,7 @@ import {
   Users,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import Logo from "../components/Logo";
 import {
   activityService,
   projectService,
@@ -257,26 +258,29 @@ const Dashboard: React.FC = () => {
       {/* 1. WELCOME HEADER & QUICK ACTIONS                                   */}
       {/* =================================================================== */}
       <div className="page-header">
-        <div className="page-title-group">
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.65rem",
-              flexWrap: "wrap",
-            }}
-          >
-            <h1>
-              Welcome back, {user?.full_name?.split(" ")[0] || "Collaborator"}
-            </h1>
-            <span className="badge badge-primary" style={{ textTransform: "capitalize" }}>
-              {user?.role?.replace("_", " ") || "Student"}
-            </span>
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+          <Logo variant="icon" size="lg" />
+          <div className="page-title-group">
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.65rem",
+                flexWrap: "wrap",
+              }}
+            >
+              <h1>
+                Welcome back, {user?.full_name?.split(" ")[0] || "Collaborator"}
+              </h1>
+              <span className="badge badge-primary" style={{ textTransform: "capitalize" }}>
+                {user?.role?.replace("_", " ") || "Student"}
+              </span>
+            </div>
+            <p>
+              Here is what is happening across your projects, agile teams, and
+              learning tracks today.
+            </p>
           </div>
-          <p>
-            Here is what is happening across your projects, agile teams, and
-            learning tracks today.
-          </p>
         </div>
 
         {/* Quick Action Buttons */}

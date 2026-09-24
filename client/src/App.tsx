@@ -10,6 +10,8 @@ import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
+import Logo from "./components/Logo";
+import { FullPageLoader } from "./components/Loading";
 
 // ============================================================================
 // LAZY-LOADED PAGE IMPORTS
@@ -23,15 +25,15 @@ const LandingPage = lazy(() =>
         <div
           className="card"
           style={{
-            maxWidth: "820px",
+            maxWidth: "840px",
             margin: "0 auto",
             textAlign: "center",
-            padding: "3.5rem 2rem",
+            padding: "3.75rem 2.25rem",
           }}
         >
-          <span className="badge badge-primary" style={{ marginBottom: "1rem" }}>
-            CollabSphere Platform
-          </span>
+          <div style={{ display: "inline-flex", marginBottom: "1.4rem" }}>
+            <Logo size="xl" variant="full" subtitle="Unified Engineering & Learning Platform" />
+          </div>
           <h1>Collaborative Learning & Project Management</h1>
           <p style={{ maxWidth: "580px", margin: "1rem auto 2rem" }}>
             Build real-world projects in teams, track agile tasks, share files,
@@ -88,10 +90,10 @@ const ProfilePage = lazy(() => import("./pages/Profile"));
 // ============================================================================
 
 const PageLoader: React.FC = () => (
-  <div className="loading-state">
-    <div className="spinner" aria-label="Loading page" />
-    <p>Loading workspace...</p>
-  </div>
+  <FullPageLoader
+    label="Loading Workspace"
+    sublabel="Preparing your CollabSphere environment..."
+  />
 );
 
 
@@ -113,17 +115,13 @@ const AppShellLayout: React.FC = () => {
       />
 
       <div
-        className="main-wrapper"
-        style={{
-          marginLeft: isSidebarCollapsed ? "78px" : undefined,
-          transition: "margin-left var(--transition-normal)",
-        }}
+        className={`main-wrapper ${isSidebarCollapsed ? "sidebar-collapsed" : ""}`}
       >
         <Navbar
           onToggleSidebar={() => setIsMobileSidebarOpen((prev) => !prev)}
         />
 
-        <main style={{ flex: 1 }}>
+        <main style={{ flex: 1, minWidth: 0 }}>
           <Outlet />
         </main>
       </div>
@@ -194,6 +192,7 @@ function App() {
                 {/* Learning, Quizzes & Certificates */}
                 <Route path="/learning" element={<LearningPage />} />
                 <Route path="/learning/:id" element={<CourseDetailsPage />} />
+                <Route path="/courses/:id" element={<CourseDetailsPage />} />
                 <Route path="/quiz/:id" element={<QuizPage />} />
                 <Route path="/certificates" element={<CertificatesPage />} />
 

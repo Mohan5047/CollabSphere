@@ -7,12 +7,12 @@ import {
   Eye,
   EyeOff,
   Info,
-  Layers,
   Loader2,
   Lock,
   Mail,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import Logo from "../../components/Logo";
 
 interface LocationState {
   from?: {
@@ -132,43 +132,14 @@ const Login: React.FC = () => {
       >
         {/* CollabSphere Branding */}
         <div style={{ textAlign: "center", marginBottom: "1.75rem" }}>
-          <Link
-            to="/"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.65rem",
-              textDecoration: "none",
-              marginBottom: "1rem",
-            }}
-          >
-            <span
-              style={{
-                width: "40px",
-                height: "40px",
-                borderRadius: "10px",
-                background:
-                  "linear-gradient(135deg, var(--primary), var(--secondary))",
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#ffffff",
-                boxShadow: "var(--shadow-glow)",
-              }}
-            >
-              <Layers size={22} />
-            </span>
-            <span
-              style={{
-                fontSize: "1.35rem",
-                fontWeight: 700,
-                color: "var(--text)",
-                letterSpacing: "-0.025em",
-              }}
-            >
-              CollabSphere
-            </span>
-          </Link>
+          <div style={{ display: "inline-flex", marginBottom: "1rem" }}>
+            <Logo
+              to="/"
+              size="lg"
+              variant="full"
+              subtitle="Collaborative Workspace"
+            />
+          </div>
 
           <h1 style={{ fontSize: "1.5rem", marginBottom: "0.35rem" }}>
             Welcome back

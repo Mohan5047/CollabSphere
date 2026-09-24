@@ -1,6 +1,7 @@
 import React from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { FullPageLoader } from "./Loading";
 
 export interface ProtectedRouteProps {
   children?: React.ReactNode;
@@ -16,11 +17,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   if (isLoading) {
     return (
-      <div className="loading-state" style={{ minHeight: "100vh" }}>
-        <div className="spinner" aria-label="Verifying session" />
-        <h3>Verifying Session</h3>
-        <p>Checking your CollabSphere authentication credentials...</p>
-      </div>
+      <FullPageLoader
+        minHeight="100vh"
+        label="Verifying Session"
+        sublabel="Checking your CollabSphere authentication credentials..."
+      />
     );
   }
 

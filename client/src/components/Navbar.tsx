@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Bell,
   ChevronDown,
-  Layers,
   LogOut,
   Menu,
   Search,
@@ -11,6 +10,7 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import Logo from "./Logo";
 
 export interface NavbarProps {
   onToggleSidebar?: () => void;
@@ -76,10 +76,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
   return (
     <header className="topbar">
       {/* Left Section: Mobile Menu Trigger + Brand */}
-      <div style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexShrink: 0 }}>
         <button
           type="button"
-          className="btn-ghost btn-icon"
+          className="btn-ghost btn-icon navbar-menu-btn"
           onClick={onToggleSidebar}
           aria-label="Toggle navigation sidebar"
           title="Toggle Menu"
@@ -87,42 +87,19 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
           <Menu size={20} />
         </button>
 
-        <Link
+        <Logo
           to="/dashboard"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.6rem",
-            color: "var(--text)",
-            fontWeight: 800,
-            fontSize: "1.05rem",
-            letterSpacing: "-0.02em",
-          }}
-        >
-          <span
-            style={{
-              width: "32px",
-              height: "32px",
-              borderRadius: "var(--radius-sm)",
-              background:
-                "linear-gradient(135deg, var(--primary), var(--secondary))",
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#ffffff",
-              boxShadow: "0 2px 10px var(--primary-glow)",
-            }}
-          >
-            <Layers size={18} />
-          </span>
-          <span>CollabSphere</span>
-        </Link>
+          size="sm"
+          variant="full"
+          textClassName="navbar-brand-text"
+        />
       </div>
 
       {/* Center Section: Search Bar */}
       <form
         onSubmit={handleSearchSubmit}
         role="search"
+        className="navbar-search-form"
         style={{
           flex: 1,
           maxWidth: "460px",
@@ -130,6 +107,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
           position: "relative",
           display: "flex",
           alignItems: "center",
+          minWidth: 0,
         }}
       >
         <Search
@@ -161,7 +139,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
       </form>
 
       {/* Right Section: Quick Actions + Notifications + User Menu */}
-      <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexShrink: 0 }}>
         <button
           type="button"
           className="btn-ghost btn-sm"

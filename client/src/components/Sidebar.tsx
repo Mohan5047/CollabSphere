@@ -11,7 +11,6 @@ import {
   ChevronRight,
   FileText,
   FolderKanban,
-  Layers,
   LayoutDashboard,
   MessageSquare,
   Send,
@@ -19,6 +18,7 @@ import {
   Users,
   X,
 } from "lucide-react";
+import Logo from "./Logo";
 
 export interface SidebarProps {
   isOpen?: boolean;
@@ -134,6 +134,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Mobile Backdrop Overlay */}
       {isOpen && (
         <div
+          className="sidebar-backdrop"
           onClick={onClose}
           aria-hidden="true"
           style={{
@@ -166,38 +167,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
             justifyContent: isCollapsed ? "center" : "space-between",
           }}
         >
-          <Link
+          <Logo
             to="/dashboard"
             onClick={onClose}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.65rem",
-              color: "var(--text)",
-              fontWeight: 800,
-              fontSize: "1.05rem",
-              letterSpacing: "-0.02em",
-            }}
-          >
-            <span
-              style={{
-                width: "32px",
-                height: "32px",
-                borderRadius: "var(--radius-sm)",
-                background:
-                  "linear-gradient(135deg, var(--primary), var(--secondary))",
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#ffffff",
-                flexShrink: 0,
-              }}
-            >
-              <Layers size={18} />
-            </span>
-
-            {!isCollapsed && <span>CollabSphere</span>}
-          </Link>
+            variant={isCollapsed ? "icon" : "full"}
+            size="sm"
+          />
 
           {!isCollapsed && (
             <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
