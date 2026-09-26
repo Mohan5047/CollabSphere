@@ -50,8 +50,8 @@ function Chat({
     const loadMessages = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5000/api/messages/${currentUserId}/${receiverId}`
-        );
+  `${import.meta.env.VITE_API_URL}/api/messages/${currentUserId}/${receiverId}`
+);
 
         const result =
           await response.json();
