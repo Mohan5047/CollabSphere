@@ -505,7 +505,7 @@ const Chat: React.FC = () => {
             borderRight: "1px solid var(--border)",
             display: "flex",
             flexDirection: "column",
-            background: "rgba(7, 26, 43, 0.65)",
+            background: "var(--surface-secondary)",
             minWidth: 0,
           }}
         >
@@ -766,7 +766,7 @@ const Chat: React.FC = () => {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  background: "rgba(7, 26, 43, 0.45)",
+                  background: "var(--surface-secondary)",
                 }}
               >
                 <div
@@ -969,13 +969,15 @@ const Chat: React.FC = () => {
                                 ? "16px 16px 4px 16px"
                                 : "16px 16px 16px 4px",
                               background: isMine
-                                ? "linear-gradient(135deg, #6366F1, #4F46E5)"
-                                : "#0B2942",
-                              color: "#F8FAFC",
+                                ? "var(--chat-own-bg)"
+                                : "var(--chat-other-bg)",
+                              color: isMine
+                                ? "var(--chat-own-text)"
+                                : "var(--chat-other-text)",
                               border: isMine
                                 ? "none"
-                                : "1px solid rgba(203, 213, 225, 0.12)",
-                              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
+                                : "1px solid var(--chat-other-border)",
+                              boxShadow: "var(--shadow-sm)",
                             }}
                           >
                             <div
@@ -996,7 +998,7 @@ const Chat: React.FC = () => {
                                 gap: "0.35rem",
                                 marginTop: "0.3rem",
                                 fontSize: "0.7rem",
-                                color: isMine ? "rgba(248, 250, 252, 0.85)" : "#94A3B8",
+                                color: isMine ? "rgba(255, 255, 255, 0.85)" : "var(--text-muted)",
                               }}
                             >
                               <Clock size={10} />
@@ -1060,7 +1062,7 @@ const Chat: React.FC = () => {
                 style={{
                   padding: "1rem 1.35rem",
                   borderTop: "1px solid var(--border)",
-                  background: "rgba(7, 26, 43, 0.6)",
+                  background: "var(--surface-secondary)",
                   display: "flex",
                   alignItems: "center",
                   gap: "0.75rem",

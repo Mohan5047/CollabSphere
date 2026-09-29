@@ -7,10 +7,12 @@ import {
   Link,
 } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
 import Logo from "./components/Logo";
+import ThemeToggle from "./components/ThemeToggle";
 import { FullPageLoader } from "./components/Loading";
 
 // ============================================================================
@@ -21,7 +23,10 @@ import { FullPageLoader } from "./components/Loading";
 const LandingPage = lazy(() =>
   Promise.resolve({
     default: () => (
-      <div className="container" style={{ paddingTop: "5rem", paddingBottom: "4rem" }}>
+      <div className="container" style={{ paddingTop: "3rem", paddingBottom: "4rem" }}>
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "1.5rem" }}>
+          <ThemeToggle />
+        </div>
         <div
           className="card"
           style={{
@@ -159,63 +164,65 @@ const NotFoundPage: React.FC = () => (
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            {/* ==========================================
-                PUBLIC ROUTES
-               ========================================== */}
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              {/* ==========================================
+                  PUBLIC ROUTES
+                 ========================================== */}
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
 
-            {/* ==========================================
-                PROTECTED ROUTES
-               ========================================== */}
-            <Route element={<ProtectedRoute />}>
-              <Route element={<AppShellLayout />}>
-                <Route path="/dashboard" element={<DashboardPage />} />
+              {/* ==========================================
+                  PROTECTED ROUTES
+                 ========================================== */}
+              <Route element={<ProtectedRoute />}>
+                <Route element={<AppShellLayout />}>
+                  <Route path="/dashboard" element={<DashboardPage />} />
 
-                {/* Projects */}
-                <Route path="/projects" element={<ProjectsPage />} />
-                <Route path="/projects/:id" element={<ProjectDetailsPage />} />
+                  {/* Projects */}
+                  <Route path="/projects" element={<ProjectsPage />} />
+                  <Route path="/projects/:id" element={<ProjectDetailsPage />} />
 
-                {/* Teams */}
-                <Route path="/teams" element={<TeamsPage />} />
-                <Route path="/teams/:id" element={<TeamDetailsPage />} />
+                  {/* Teams */}
+                  <Route path="/teams" element={<TeamsPage />} />
+                  <Route path="/teams/:id" element={<TeamDetailsPage />} />
 
-                {/* Tasks & Applications */}
-                <Route path="/tasks" element={<TasksPage />} />
-                <Route path="/applications" element={<ApplicationsPage />} />
+                  {/* Tasks & Applications */}
+                  <Route path="/tasks" element={<TasksPage />} />
+                  <Route path="/applications" element={<ApplicationsPage />} />
 
-                {/* Learning, Quizzes & Certificates */}
-                <Route path="/learning" element={<LearningPage />} />
-                <Route path="/learning/:id" element={<CourseDetailsPage />} />
-                <Route path="/courses/:id" element={<CourseDetailsPage />} />
-                <Route path="/quiz/:id" element={<QuizPage />} />
-                <Route path="/certificates" element={<CertificatesPage />} />
+                  {/* Learning, Quizzes & Certificates */}
+                  <Route path="/learning" element={<LearningPage />} />
+                  <Route path="/learning/:id" element={<CourseDetailsPage />} />
+                  <Route path="/courses/:id" element={<CourseDetailsPage />} />
+                  <Route path="/quiz/:id" element={<QuizPage />} />
+                  <Route path="/certificates" element={<CertificatesPage />} />
 
-                {/* Communication, Files, Activity & AI */}
-                <Route path="/notifications" element={<NotificationsPage />} />
-                <Route path="/chat" element={<ChatPage />} />
-                <Route path="/files" element={<FilesPage />} />
-                <Route path="/activity" element={<ActivityPage />} />
-                <Route path="/ai-assistant" element={<AiAssistantPage />} />
+                  {/* Communication, Files, Activity & AI */}
+                  <Route path="/notifications" element={<NotificationsPage />} />
+                  <Route path="/chat" element={<ChatPage />} />
+                  <Route path="/files" element={<FilesPage />} />
+                  <Route path="/activity" element={<ActivityPage />} />
+                  <Route path="/ai-assistant" element={<AiAssistantPage />} />
 
-                {/* User Profile */}
-                <Route path="/profile" element={<ProfilePage />} />
+                  {/* User Profile */}
+                  <Route path="/profile" element={<ProfilePage />} />
+                </Route>
               </Route>
-            </Route>
 
-            {/* ==========================================
-                404 FALLBACK ROUTE
-               ========================================== */}
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
-    </AuthProvider>
+              {/* ==========================================
+                  404 FALLBACK ROUTE
+                 ========================================== */}
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

@@ -243,11 +243,9 @@ export const Loading: React.FC<LoadingProps> = ({
             width: "76px",
             height: "76px",
             borderRadius: "22px",
-            background:
-              "linear-gradient(145deg, #0B2942, #071A2B)",
-            border: "1px solid rgba(203, 213, 225, 0.12)",
-            boxShadow:
-              "0 14px 34px rgba(0, 0, 0, 0.45), 0 0 24px rgba(99, 102, 241, 0.2)",
+            background: "var(--card)",
+            border: "1px solid var(--border)",
+            boxShadow: "var(--shadow-md)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -262,7 +260,7 @@ export const Loading: React.FC<LoadingProps> = ({
             margin: "0 0 0.35rem",
             fontSize: "1.125rem",
             fontWeight: 700,
-            color: "var(--text, #f3f4f6)",
+            color: "var(--text-heading)",
             letterSpacing: "-0.015em",
           }}
         >
@@ -366,7 +364,7 @@ export const Loading: React.FC<LoadingProps> = ({
                   margin: "0 auto",
                   borderRadius: "999px",
                   background:
-                    "linear-gradient(90deg, rgba(11, 41, 66, 0.5) 25%, rgba(99, 102, 241, 0.2) 50%, rgba(11, 41, 66, 0.5) 75%)",
+                    "linear-gradient(90deg, var(--border-light) 25%, var(--primary-soft) 50%, var(--border-light) 75%)",
                   backgroundSize: "200% 100%",
                   animation: "cs-shimmer 1.6s ease-in-out infinite",
                 }}

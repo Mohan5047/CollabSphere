@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import Logo from "../../components/Logo";
+import ThemeToggle from "../../components/ThemeToggle";
 import type { UserRole } from "../../types";
 
 const ROLE_OPTIONS: { value: UserRole; label: string; description: string }[] =
@@ -170,10 +171,14 @@ const Register: React.FC = () => {
         alignItems: "center",
         justifyContent: "center",
         padding: "2rem 1.25rem",
-        background:
-          "radial-gradient(circle at 85% 15%, rgba(99, 102, 241, 0.12), transparent 45%), radial-gradient(circle at 15% 85%, rgba(56, 189, 248, 0.05), transparent 42%), var(--background)",
+        backgroundColor: "var(--background)",
+        position: "relative",
       }}
     >
+      <div style={{ position: "fixed", top: "1.25rem", right: "1.5rem", zIndex: 10 }}>
+        <ThemeToggle />
+      </div>
+
       <div
         className="card"
         style={{

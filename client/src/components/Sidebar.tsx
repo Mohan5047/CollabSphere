@@ -140,7 +140,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           style={{
             position: "fixed",
             inset: 0,
-            backgroundColor: "rgba(7, 26, 43, 0.75)",
+            backgroundColor: "var(--modal-overlay, rgba(15, 23, 42, 0.45))",
             backdropFilter: "blur(4px)",
             zIndex: 35,
           }}
@@ -266,12 +266,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     borderRadius: "var(--radius-sm)",
                     fontSize: "0.88rem",
                     fontWeight: active ? 600 : 500,
-                    color: active ? "#A5B4FC" : "var(--text-muted)",
+                    color: active ? "var(--nav-active-text)" : "var(--nav-text)",
                     backgroundColor: active
-                      ? "rgba(99, 102, 241, 0.15)"
+                      ? "var(--nav-active-bg)"
                       : "transparent",
                     borderLeft: active
-                      ? "3px solid #6366F1"
+                      ? "3px solid var(--nav-active-border)"
                       : "3px solid transparent",
                     transition: "all var(--transition-fast)",
                   }}
@@ -279,7 +279,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <span
                     style={{
                       display: "inline-flex",
-                      color: active ? "#818CF8" : "inherit",
+                      color: active ? "var(--nav-active-text)" : "inherit",
                       flexShrink: 0,
                     }}
                   >

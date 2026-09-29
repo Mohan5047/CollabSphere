@@ -349,7 +349,7 @@ const AIAssistant: React.FC = () => {
           style={{
             padding: "0.85rem 1.25rem",
             borderBottom: "1px solid var(--border)",
-            background: "rgba(7, 26, 43, 0.5)",
+            background: "var(--surface-secondary)",
             display: "flex",
             flexWrap: "wrap",
             alignItems: "center",
@@ -665,7 +665,7 @@ const AIAssistant: React.FC = () => {
           style={{
             padding: "1rem 1.35rem",
             borderTop: "1px solid var(--border)",
-            background: "rgba(7, 26, 43, 0.6)",
+            background: "var(--surface-secondary)",
             display: "flex",
             alignItems: "center",
             gap: "0.75rem",

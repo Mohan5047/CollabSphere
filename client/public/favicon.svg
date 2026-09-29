@@ -1,37 +1,37 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
   <defs>
     <linearGradient id="cs-bg" x1="6" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#0B2942" />
-      <stop offset="100%" stop-color="#071A2B" />
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="100%" stop-color="#3730A3" />
     </linearGradient>
     <linearGradient id="cs-ring" x1="10" y1="10" x2="54" y2="54" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#818CF8" />
-      <stop offset="50%" stop-color="#6366F1" />
-      <stop offset="100%" stop-color="#4F46E5" />
+      <stop offset="0%" stop-color="#C7D2FE" />
+      <stop offset="50%" stop-color="#A5B4FC" />
+      <stop offset="100%" stop-color="#818CF8" />
     </linearGradient>
     <linearGradient id="cs-node" x1="16" y1="16" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#A5B4FC" />
-      <stop offset="100%" stop-color="#6366F1" />
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#C7D2FE" />
     </linearGradient>
   </defs>
 
   <!-- Rounded Squircle Container -->
-  <rect x="4" y="4" width="56" height="56" rx="16" fill="url(#cs-bg)" stroke="#6366F1" stroke-opacity="0.45" stroke-width="2" />
+  <rect x="4" y="4" width="56" height="56" rx="16" fill="url(#cs-bg)" stroke="#A5B4FC" stroke-opacity="0.5" stroke-width="2" />
 
   <!-- Outer Sphere Meridian & Equatorial Orbits -->
-  <circle cx="32" cy="32" r="19" stroke="url(#cs-ring)" stroke-width="1.75" stroke-opacity="0.6" />
+  <circle cx="32" cy="32" r="19" stroke="url(#cs-ring)" stroke-width="1.75" stroke-opacity="0.75" />
   <ellipse cx="32" cy="32" rx="19" ry="8.5" transform="rotate(-28 32 32)" stroke="url(#cs-ring)" stroke-width="1.75" />
-  <ellipse cx="32" cy="32" rx="8.5" ry="19" transform="rotate(-28 32 32)" stroke="#4F46E5" stroke-width="1.5" stroke-opacity="0.75" />
+  <ellipse cx="32" cy="32" rx="8.5" ry="19" transform="rotate(-28 32 32)" stroke="#C7D2FE" stroke-width="1.5" stroke-opacity="0.8" />
 
   <!-- Collaboration Network Connectors -->
   <path d="M18.5 24.5L32 32L45.5 24.5M32 32L32 47.5M21 41.5L32 32L43 41.5" stroke="url(#cs-node)" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" />
 
   <!-- Connected Satellite Nodes (Teams, Projects, Learning, Communication) -->
-  <circle cx="18.5" cy="24.5" r="3.4" fill="#6366F1" stroke="#071A2B" stroke-width="1.4" />
-  <circle cx="45.5" cy="24.5" r="3.4" fill="#4F46E5" stroke="#071A2B" stroke-width="1.4" />
-  <circle cx="21" cy="41.5" r="3" fill="#818CF8" stroke="#071A2B" stroke-width="1.4" />
-  <circle cx="43" cy="41.5" r="3" fill="#38BDF8" stroke="#071A2B" stroke-width="1.4" />
+  <circle cx="18.5" cy="24.5" r="3.4" fill="#818CF8" stroke="#3730A3" stroke-width="1.4" />
+  <circle cx="45.5" cy="24.5" r="3.4" fill="#A5B4FC" stroke="#3730A3" stroke-width="1.4" />
+  <circle cx="21" cy="41.5" r="3" fill="#C7D2FE" stroke="#3730A3" stroke-width="1.4" />
+  <circle cx="43" cy="41.5" r="3" fill="#38BDF8" stroke="#3730A3" stroke-width="1.4" />
 
   <!-- Central Shared Digital Workspace Core -->
-  <circle cx="32" cy="32" r="5" fill="url(#cs-node)" stroke="#F8FAFC" stroke-width="1.6" />
+  <circle cx="32" cy="32" r="5" fill="url(#cs-node)" stroke="#FFFFFF" stroke-width="1.6" />
 </svg>

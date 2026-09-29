@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import Logo from "./Logo";
+import ThemeToggle from "./ThemeToggle";
 
 export interface NavbarProps {
   onToggleSidebar?: () => void;
@@ -185,6 +186,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
             }}
           />
         </button>
+
+        {/* Theme Toggle (Light / Dark Mode) */}
+        <ThemeToggle />
 
         {/* User Profile Dropdown */}
         <div ref={menuRef} style={{ position: "relative" }}>

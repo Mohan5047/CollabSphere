@@ -131,7 +131,7 @@ export const Logo: React.FC<LogoProps> = ({
         gap: preset.gap,
         userSelect: "none",
         textDecoration: "none",
-        color: "var(--color-white, #F8FAFC)",
+        color: "var(--text-heading, #1E293B)",
         cursor: to || onClick ? "pointer" : "default",
         ...style,
       }}
@@ -160,7 +160,7 @@ export const Logo: React.FC<LogoProps> = ({
           aria-hidden="true"
         >
           <defs>
-            {/* Deep Atlantic -> Atlantic Blue background container */}
+            {/* Electric Indigo brand background container */}
             <linearGradient
               id={bgGradId}
               x1="4"
@@ -169,10 +169,10 @@ export const Logo: React.FC<LogoProps> = ({
               y2="60"
               gradientUnits="userSpaceOnUse"
             >
-              <stop offset="0%" stopColor="#0B2942" />
-              <stop offset="100%" stopColor="#071A2B" />
+              <stop offset="0%" stopColor="#4F46E5" />
+              <stop offset="100%" stopColor="#3730A3" />
             </linearGradient>
-            {/* Electric Indigo -> Deep Indigo border and orbital ring */}
+            {/* Soft Indigo ring */}
             <linearGradient
               id={ringGradId}
               x1="8"
@@ -181,10 +181,10 @@ export const Logo: React.FC<LogoProps> = ({
               y2="56"
               gradientUnits="userSpaceOnUse"
             >
-              <stop offset="0%" stopColor="#6366F1" />
-              <stop offset="100%" stopColor="#4F46E5" />
+              <stop offset="0%" stopColor="#A5B4FC" />
+              <stop offset="100%" stopColor="#6366F1" />
             </linearGradient>
-            {/* Connectors with subtle cyan highlight */}
+            {/* Connectors with cyan and white highlight */}
             <linearGradient
               id={nodeGradId}
               x1="16"
@@ -193,9 +193,9 @@ export const Logo: React.FC<LogoProps> = ({
               y2="48"
               gradientUnits="userSpaceOnUse"
             >
-              <stop offset="0%" stopColor="#38BDF8" />
-              <stop offset="50%" stopColor="#6366F1" />
-              <stop offset="100%" stopColor="#4F46E5" />
+              <stop offset="0%" stopColor="#BAE6FD" />
+              <stop offset="50%" stopColor="#FFFFFF" />
+              <stop offset="100%" stopColor="#C7D2FE" />
             </linearGradient>
           </defs>
 
@@ -262,24 +262,24 @@ export const Logo: React.FC<LogoProps> = ({
             cx="18.5"
             cy="24.5"
             r="3.5"
-            fill="#6366F1"
-            stroke="#071A2B"
+            fill="#818CF8"
+            stroke="#3730A3"
             strokeWidth="1.4"
           />
           <circle
             cx="45.5"
             cy="24.5"
             r="3.5"
-            fill="#4F46E5"
-            stroke="#071A2B"
+            fill="#A5B4FC"
+            stroke="#3730A3"
             strokeWidth="1.4"
           />
           <circle
             cx="20.5"
             cy="41.5"
             r="3.1"
-            fill="#818CF8"
-            stroke="#071A2B"
+            fill="#C7D2FE"
+            stroke="#3730A3"
             strokeWidth="1.4"
           />
           <circle
@@ -287,7 +287,7 @@ export const Logo: React.FC<LogoProps> = ({
             cy="41.5"
             r="3.1"
             fill="#38BDF8"
-            stroke="#071A2B"
+            stroke="#3730A3"
             strokeWidth="1.4"
           />
 
@@ -297,7 +297,7 @@ export const Logo: React.FC<LogoProps> = ({
             cy="32"
             r="5.2"
             fill={`url(#${nodeGradId})`}
-            stroke="#F8FAFC"
+            stroke="#FFFFFF"
             strokeWidth="1.65"
           />
         </svg>
@@ -319,7 +319,7 @@ export const Logo: React.FC<LogoProps> = ({
               fontSize: preset.fontSize,
               fontWeight: 800,
               letterSpacing: "-0.03em",
-              color: "var(--color-white, #F8FAFC)",
+              color: "var(--text-heading, #1E293B)",
               display: "inline-flex",
               alignItems: "center",
             }}
@@ -328,7 +328,7 @@ export const Logo: React.FC<LogoProps> = ({
             <span
               style={{
                 background:
-                  "linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)",
+                  "linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
               }}
@@ -342,7 +342,7 @@ export const Logo: React.FC<LogoProps> = ({
               style={{
                 fontSize: preset.subtitleSize,
                 fontWeight: 600,
-                color: "var(--color-cool-gray, #CBD5E1)",
+                color: "var(--text-muted, #94A3B8)",
                 letterSpacing: "0.02em",
                 marginTop: "0.12rem",
               }}

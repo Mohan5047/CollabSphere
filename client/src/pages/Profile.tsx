@@ -387,9 +387,8 @@ const Profile: React.FC = () => {
             style={{
               padding: "2rem",
               marginBottom: "1.5rem",
-              background:
-                "linear-gradient(135deg, rgba(99, 102, 241, 0.18) 0%, rgba(11, 41, 66, 0.9) 100%)",
-              borderColor: "rgba(99, 102, 241, 0.35)",
+              background: "var(--primary-soft)",
+              borderColor: "var(--border)",
               display: "flex",
               flexWrap: "wrap",
               alignItems: "center",
