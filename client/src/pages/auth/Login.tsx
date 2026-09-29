@@ -118,7 +118,7 @@ const Login: React.FC = () => {
         justifyContent: "center",
         padding: "1.5rem",
         background:
-          "radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.14), transparent 40%), radial-gradient(circle at 85% 85%, rgba(14, 165, 233, 0.12), transparent 40%), var(--bg)",
+          "radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.12), transparent 45%), radial-gradient(circle at 85% 85%, rgba(56, 189, 248, 0.05), transparent 40%), var(--background)",
       }}
     >
       <div
