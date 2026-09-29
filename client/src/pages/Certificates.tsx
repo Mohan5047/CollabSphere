@@ -717,7 +717,7 @@ const Certificates: React.FC = () => {
                   style={{
                     padding: "1.35rem 1.5rem",
                     background:
-                      "linear-gradient(135deg, rgba(99, 102, 241, 0.22) 0%, rgba(15, 23, 42, 0.92) 100%)",
+                      "linear-gradient(135deg, rgba(99, 102, 241, 0.22) 0%, rgba(11, 41, 66, 0.92) 100%)",
                     borderBottom: "1px solid var(--border)",
                     position: "relative",
                   }}
@@ -908,7 +908,7 @@ const Certificates: React.FC = () => {
                   style={{
                     padding: "1rem 1.5rem",
                     borderTop: "1px solid var(--border)",
-                    background: "rgba(15, 23, 42, 0.35)",
+                    background: "rgba(7, 26, 43, 0.5)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",

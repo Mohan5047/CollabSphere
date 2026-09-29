@@ -388,7 +388,7 @@ const Profile: React.FC = () => {
               padding: "2rem",
               marginBottom: "1.5rem",
               background:
-                "linear-gradient(135deg, rgba(99, 102, 241, 0.18) 0%, rgba(15, 23, 42, 0.9) 100%)",
+                "linear-gradient(135deg, rgba(99, 102, 241, 0.18) 0%, rgba(11, 41, 66, 0.9) 100%)",
               borderColor: "rgba(99, 102, 241, 0.35)",
               display: "flex",
               flexWrap: "wrap",
@@ -1062,7 +1062,7 @@ const Profile: React.FC = () => {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
-                    color: "#a855f7",
+                    color: "#818CF8",
                     marginBottom: "0.5rem",
                   }}
                 >

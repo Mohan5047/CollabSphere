@@ -210,9 +210,9 @@ const Notifications: React.FC = () => {
       return {
         label: type,
         icon: Users,
-        color: "#a855f7",
-        bg: "rgba(168, 85, 247, 0.14)",
-        border: "rgba(168, 85, 247, 0.3)",
+        color: "#818CF8",
+        bg: "rgba(99, 102, 241, 0.14)",
+        border: "rgba(99, 102, 241, 0.3)",
       };
     }
     if (type.includes("PROJECT")) {

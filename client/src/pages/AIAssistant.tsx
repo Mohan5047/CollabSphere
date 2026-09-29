@@ -73,7 +73,7 @@ const ASSISTANT_CATEGORIES: AssistantCategory[] = [
     title: "Team Collaboration",
     description: "Role delegation, file sharing workflows, and communication",
     icon: Users,
-    color: "#a855f7",
+    color: "#818CF8",
     prompts: [
       "What are the best practices for collaborating with my team on CollabSphere?",
       "How should we organize roles, tasks, and shared files in our team workspace?",
@@ -349,7 +349,7 @@ const AIAssistant: React.FC = () => {
           style={{
             padding: "0.85rem 1.25rem",
             borderBottom: "1px solid var(--border)",
-            background: "rgba(15, 23, 42, 0.35)",
+            background: "rgba(7, 26, 43, 0.5)",
             display: "flex",
             flexWrap: "wrap",
             alignItems: "center",
@@ -665,7 +665,7 @@ const AIAssistant: React.FC = () => {
           style={{
             padding: "1rem 1.35rem",
             borderTop: "1px solid var(--border)",
-            background: "rgba(15, 23, 42, 0.45)",
+            background: "rgba(7, 26, 43, 0.6)",
             display: "flex",
             alignItems: "center",
             gap: "0.75rem",

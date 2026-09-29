@@ -244,10 +244,10 @@ export const Loading: React.FC<LoadingProps> = ({
             height: "76px",
             borderRadius: "22px",
             background:
-              "linear-gradient(145deg, rgba(20, 25, 37, 0.95), rgba(15, 23, 42, 0.9))",
-            border: "1px solid var(--border-light, #2e3750)",
+              "linear-gradient(145deg, #0B2942, #071A2B)",
+            border: "1px solid rgba(203, 213, 225, 0.12)",
             boxShadow:
-              "0 14px 34px rgba(0, 0, 0, 0.48), 0 0 24px rgba(99, 102, 241, 0.22)",
+              "0 14px 34px rgba(0, 0, 0, 0.45), 0 0 24px rgba(99, 102, 241, 0.2)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -366,7 +366,7 @@ export const Loading: React.FC<LoadingProps> = ({
                   margin: "0 auto",
                   borderRadius: "999px",
                   background:
-                    "linear-gradient(90deg, rgba(35, 42, 61, 0.45) 25%, rgba(99, 102, 241, 0.18) 50%, rgba(35, 42, 61, 0.45) 75%)",
+                    "linear-gradient(90deg, rgba(11, 41, 66, 0.5) 25%, rgba(99, 102, 241, 0.2) 50%, rgba(11, 41, 66, 0.5) 75%)",
                   backgroundSize: "200% 100%",
                   animation: "cs-shimmer 1.6s ease-in-out infinite",
                 }}

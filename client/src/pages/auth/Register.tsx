@@ -171,7 +171,7 @@ const Register: React.FC = () => {
         justifyContent: "center",
         padding: "2rem 1.25rem",
         background:
-          "radial-gradient(circle at 85% 15%, rgba(99, 102, 241, 0.14), transparent 42%), radial-gradient(circle at 15% 85%, rgba(14, 165, 233, 0.12), transparent 42%), var(--bg)",
+          "radial-gradient(circle at 85% 15%, rgba(99, 102, 241, 0.12), transparent 45%), radial-gradient(circle at 15% 85%, rgba(56, 189, 248, 0.05), transparent 42%), var(--background)",
       }}
     >
       <div

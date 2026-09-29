@@ -194,9 +194,9 @@ const Activity: React.FC = () => {
         category: "TEAM" as CategoryFilter,
         label: "Team Activity",
         icon: Users,
-        color: "#a855f7",
-        bg: "rgba(168, 85, 247, 0.14)",
-        border: "rgba(168, 85, 247, 0.3)",
+        color: "#818CF8",
+        bg: "rgba(99, 102, 241, 0.14)",
+        border: "rgba(99, 102, 241, 0.3)",
       };
     }
     if (type.includes("PROJECT") || type.includes("APPLICATION")) {
@@ -798,7 +798,7 @@ const Activity: React.FC = () => {
                           textDecoration: "none",
                         }}
                       >
-                        <Users size={12} style={{ color: "#a855f7" }} />
+                        <Users size={12} style={{ color: "#818CF8" }} />
                         <span>
                           {relatedTeam?.name || `Team #${item.team_id}`}
                         </span>
