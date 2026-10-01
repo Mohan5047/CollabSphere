@@ -139,7 +139,6 @@ const Login: React.FC = () => {
         <div style={{ textAlign: "center", marginBottom: "1.75rem" }}>
           <div style={{ display: "inline-flex", marginBottom: "1rem" }}>
             <Logo
-              to="/"
               size="lg"
               variant="full"
               subtitle="Collaborative Workspace"

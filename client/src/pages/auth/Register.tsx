@@ -192,7 +192,6 @@ const Register: React.FC = () => {
         <div style={{ textAlign: "center", marginBottom: "1.65rem" }}>
           <div style={{ display: "inline-flex", marginBottom: "0.95rem" }}>
             <Logo
-              to="/"
               size="lg"
               variant="full"
               subtitle="Collaborative Workspace"

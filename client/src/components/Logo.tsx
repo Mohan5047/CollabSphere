@@ -1,5 +1,6 @@
-import React, { useId } from "react";
+import React, { useContext, useId } from "react";
 import { Link } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 
 // ============================================================================
 // TYPES & CONFIGURATION
@@ -28,17 +29,21 @@ export interface LogoProps {
   subtitle?: string;
 
   /**
-   * Optional route path if the logo should render as an interactive React Router `<Link>`.
+   * Destination route path when clicked.
+   * - If omitted (`undefined`), dynamically routes like modern social/SaaS apps:
+   *   `/dashboard` if authenticated, or `/` if guest.
+   * - If string, links to that specific route.
+   * - If `false` or `null`, renders as non-clickable.
    */
-  to?: string;
+  to?: string | false | null;
 
   /**
-   * Optional click handler.
+   * Optional click handler (runs alongside navigation).
    */
-  onClick?: () => void;
+  onClick?: (e?: React.MouseEvent) => void;
 
   /**
-   * Optional className for the outer wrapper.
+   * Optional className for the outer element.
    */
   className?: string;
 
@@ -51,6 +56,16 @@ export interface LogoProps {
    * Optional inline styles.
    */
   style?: React.CSSProperties;
+
+  /**
+   * Accessible label for screen readers.
+   */
+  "aria-label"?: string;
+
+  /**
+   * Tooltip title attribute.
+   */
+  title?: string;
 }
 
 const SIZE_PRESETS: Record<
@@ -113,27 +128,70 @@ export const Logo: React.FC<LogoProps> = ({
   className = "",
   textClassName = "",
   style,
+  "aria-label": customAriaLabel,
+  title: customTitle,
 }) => {
   const uid = useId().replace(/:/g, "");
   const preset = SIZE_PRESETS[size];
+  const auth = useContext(AuthContext);
+  const isAuthenticated = auth?.isAuthenticated ?? false;
+
+  // Resolve target route:
+  // - null or false: explicit non-clickable
+  // - string: explicit custom route
+  // - undefined: automatic brand navigation (/dashboard if logged in, / if guest)
+  const resolvedTo: string | null =
+    to === false || to === null
+      ? null
+      : typeof to === "string"
+      ? to
+      : isAuthenticated
+      ? "/dashboard"
+      : "/";
+
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (onClick) {
+      onClick(e);
+    }
+    // If user is already on the destination page, smooth-scroll to top (like Instagram / YouTube)
+    if (
+      resolvedTo &&
+      typeof window !== "undefined" &&
+      window.location.pathname === resolvedTo
+    ) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const handleNonLinkClick = (e: React.MouseEvent<HTMLSpanElement>) => {
+    if (onClick) {
+      onClick(e);
+    }
+  };
+
+  const defaultAriaLabel =
+    resolvedTo === "/dashboard"
+      ? "Go to CollabSphere Dashboard"
+      : "Go to CollabSphere Home";
+
+  const defaultTitle =
+    resolvedTo === "/dashboard"
+      ? "CollabSphere Dashboard"
+      : "CollabSphere Home";
 
   const bgGradId = `cs-logo-bg-${uid}`;
   const ringGradId = `cs-logo-ring-${uid}`;
   const nodeGradId = `cs-logo-node-${uid}`;
 
-  const content = (
+  const innerContent = (
     <span
-      className={`cs-logo cs-logo-${variant} cs-logo-${size} ${className}`.trim()}
-      onClick={!to ? onClick : undefined}
+      className={`cs-logo-inner cs-logo-${variant} cs-logo-${size}`}
       style={{
         display: "inline-flex",
         alignItems: "center",
         gap: preset.gap,
         userSelect: "none",
-        textDecoration: "none",
         color: "var(--text-heading, #1E293B)",
-        cursor: to || onClick ? "pointer" : "default",
-        ...style,
       }}
     >
       {/* Abstract Orbital Sphere + Connected Collaboration Nodes Symbol */}
@@ -355,20 +413,41 @@ export const Logo: React.FC<LogoProps> = ({
     </span>
   );
 
-  if (to) {
+  if (resolvedTo) {
     return (
       <Link
-        to={to}
-        onClick={onClick}
-        aria-label="CollabSphere Home"
-        style={{ textDecoration: "none", display: "inline-flex" }}
+        to={resolvedTo}
+        onClick={handleLinkClick}
+        aria-label={customAriaLabel || defaultAriaLabel}
+        title={customTitle || defaultTitle}
+        className={`cs-logo-link ${className}`.trim()}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          textDecoration: "none",
+          color: "inherit",
+          ...style,
+        }}
       >
-        {content}
+        {innerContent}
       </Link>
     );
   }
 
-  return content;
+  return (
+    <span
+      className={`cs-logo-wrapper cs-logo-${variant} cs-logo-${size} ${className}`.trim()}
+      onClick={handleNonLinkClick}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        cursor: onClick ? "pointer" : "default",
+        ...style,
+      }}
+    >
+      {innerContent}
+    </span>
+  );
 };
 
 export default Logo;
