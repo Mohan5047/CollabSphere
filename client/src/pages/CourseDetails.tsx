@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import {
   AlertCircle,
   ArrowLeft,
+  Award,
   BookOpen,
   CheckCircle2,
   ChevronRight,
@@ -302,7 +303,7 @@ const CourseDetails: React.FC = () => {
     setIsUpdatingProgress(true);
 
     try {
-      await progressService.updateProgress({
+      const res = await progressService.updateProgress({
         user_id: Number(user.id),
         lesson_id: Number(lesson.id),
         status: "COMPLETED",
@@ -315,7 +316,22 @@ const CourseDetails: React.FC = () => {
         return next;
       });
 
-      setStatusNotice(`Marked "${lesson.title}" as completed!`);
+      const nextCompletedCount = completedLessonIds.has(Number(lesson.id))
+        ? completedLessonIds.size
+        : completedLessonIds.size + 1;
+      const isComplete =
+        (res as { course_progress?: { is_completed?: boolean } })?.course_progress
+          ?.is_completed ||
+        (allCourseLessons.length > 0 &&
+          nextCompletedCount >= allCourseLessons.length);
+
+      if (isComplete) {
+        setStatusNotice(
+          `🎉 Congratulations! You have completed all lessons in "${course?.title || "this course"}". Your Certificate of Completion has been generated!`
+        );
+      } else {
+        setStatusNotice(`Marked "${lesson.title}" as completed!`);
+      }
     } catch (err) {
       setActionError(
         err instanceof Error
@@ -600,14 +616,34 @@ const CourseDetails: React.FC = () => {
                 )}
               </button>
             ) : (
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={handleContinueLearning}
-              >
-                <PlayCircle size={16} />
-                <span>Continue Learning</span>
-              </button>
+              <>
+                {progressStats.percentage >= 100 ? (
+                  <Link
+                    to="/certificates"
+                    className="btn btn-primary"
+                    style={{
+                      backgroundColor: "#10B981",
+                      borderColor: "#10B981",
+                      color: "#FFFFFF",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "0.45rem",
+                    }}
+                  >
+                    <Award size={16} />
+                    <span>View Certificate</span>
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={handleContinueLearning}
+                  >
+                    <PlayCircle size={16} />
+                    <span>Continue Learning</span>
+                  </button>
+                )}
+              </>
             )}
 
             {courseQuizzes.length > 0 && (

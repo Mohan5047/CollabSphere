@@ -3,7 +3,7 @@ const pool = require("../config/db");
 // GET all courses
 const getAllCourses = async (req, res) => {
     try {
-        const result = await pool.query(`
+        let query = `
             SELECT
                 c.id,
                 c.title,
@@ -12,13 +12,38 @@ const getAllCourses = async (req, res) => {
                 c.level,
                 c.duration_hours,
                 c.is_published,
+                c.created_at,
                 lt.id AS track_id,
-                lt.name AS track_name
+                lt.name AS track_name,
+                lt.category_id,
+                lc.name AS category_name
             FROM courses c
             JOIN learning_tracks lt
                 ON c.track_id = lt.id
-            ORDER BY c.id ASC
-        `);
+            JOIN learning_categories lc
+                ON lt.category_id = lc.id
+            WHERE c.is_published = true
+        `;
+        const params = [];
+
+        if (req.query.category_id && req.query.category_id !== "ALL") {
+            params.push(req.query.category_id);
+            query += ` AND lt.category_id = $${params.length}`;
+        }
+
+        if (req.query.track_id && req.query.track_id !== "ALL") {
+            params.push(req.query.track_id);
+            query += ` AND c.track_id = $${params.length}`;
+        }
+
+        if (req.query.search) {
+            params.push(`%${req.query.search.trim().toLowerCase()}%`);
+            query += ` AND (LOWER(c.title) LIKE $${params.length} OR LOWER(c.description) LIKE $${params.length} OR LOWER(lt.name) LIKE $${params.length} OR LOWER(lc.name) LIKE $${params.length})`;
+        }
+
+        query += ` ORDER BY c.id ASC`;
+
+        const result = await pool.query(query, params);
 
         res.status(200).json({
             success: true,
@@ -27,7 +52,7 @@ const getAllCourses = async (req, res) => {
         });
 
     } catch (err) {
-        console.error(err);
+        console.error("GET ALL COURSES ERROR:", err);
 
         res.status(500).json({
             success: false,
@@ -51,11 +76,16 @@ const getCourseById = async (req, res) => {
                 c.level,
                 c.duration_hours,
                 c.is_published,
+                c.created_at,
                 lt.id AS track_id,
-                lt.name AS track_name
+                lt.name AS track_name,
+                lt.category_id,
+                lc.name AS category_name
             FROM courses c
             JOIN learning_tracks lt
                 ON c.track_id = lt.id
+            JOIN learning_categories lc
+                ON lt.category_id = lc.id
             WHERE c.id = $1
         `, [id]);
 
@@ -72,7 +102,7 @@ const getCourseById = async (req, res) => {
         });
 
     } catch (err) {
-        console.error(err);
+        console.error("GET COURSE BY ID ERROR:", err);
 
         res.status(500).json({
             success: false,

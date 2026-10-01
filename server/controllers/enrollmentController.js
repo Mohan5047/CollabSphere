@@ -19,6 +19,14 @@ const enrollUser = async (req, res) => {
             [user_id, course_id]
         );
 
+        // Also initialize user_progress record
+        await pool.query(
+            `INSERT INTO user_progress (user_id, course_id, completed_modules, completed_lessons, progress_percentage, status, last_accessed)
+             VALUES ($1, $2, 0, 0, 0, 'IN_PROGRESS', CURRENT_TIMESTAMP)
+             ON CONFLICT (user_id, course_id) DO NOTHING`,
+            [user_id, course_id]
+        );
+
         res.status(201).json({
             success: true,
             message: "User enrolled successfully",

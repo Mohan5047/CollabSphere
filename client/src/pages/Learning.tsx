@@ -183,11 +183,24 @@ const Learning: React.FC = () => {
 
       if (!q) return true;
 
+      const category = course.category_id
+        ? categoryMap.get(Number(course.category_id))
+        : track
+          ? categoryMap.get(Number(track.category_id))
+          : undefined;
+
       const titleMatch = (course.title || "").toLowerCase().includes(q);
       const descMatch = (course.description || "").toLowerCase().includes(q);
-      const trackMatch = (track?.title || "").toLowerCase().includes(q);
+      const trackMatch = (
+        track?.title ||
+        (track as { name?: string })?.name ||
+        ""
+      )
+        .toLowerCase()
+        .includes(q);
+      const catMatch = (category?.name || "").toLowerCase().includes(q);
 
-      return titleMatch || descMatch || trackMatch;
+      return titleMatch || descMatch || trackMatch || catMatch;
     });
   }, [
     courses,
@@ -197,6 +210,7 @@ const Learning: React.FC = () => {
     onlyEnrolled,
     enrolledMap,
     trackMap,
+    categoryMap,
   ]);
 
   // Recently Accessed / Enrolled Courses
@@ -539,7 +553,7 @@ const Learning: React.FC = () => {
               <option value="ALL">All Tracks ({visibleTracks.length})</option>
               {visibleTracks.map((trk) => (
                 <option key={trk.id} value={String(trk.id)}>
-                  {trk.title}
+                  {trk.title || (trk as { name?: string }).name}
                 </option>
               ))}
             </select>
@@ -715,7 +729,7 @@ const Learning: React.FC = () => {
                       }}
                     >
                       <Compass size={13} />
-                      <span>{track.title}</span>
+                      <span>{track.title || (track as { name?: string }).name}</span>
                     </div>
                   )}
 
@@ -800,13 +814,31 @@ const Learning: React.FC = () => {
                   </span>
 
                   {isEnrolled ? (
-                    <Link
-                      to={`/learning/${course.id}`}
-                      className="btn btn-primary btn-sm"
-                    >
-                      <span>Continue Learning</span>
-                      <ArrowRight size={14} />
-                    </Link>
+                    pct >= 100 ? (
+                      <Link
+                        to="/certificates"
+                        className="btn btn-primary btn-sm"
+                        style={{
+                          backgroundColor: "#10B981",
+                          borderColor: "#10B981",
+                          color: "#FFFFFF",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.35rem",
+                        }}
+                      >
+                        <Award size={14} />
+                        <span>Certificate</span>
+                      </Link>
+                    ) : (
+                      <Link
+                        to={`/learning/${course.id}`}
+                        className="btn btn-primary btn-sm"
+                      >
+                        <span>Continue Learning</span>
+                        <ArrowRight size={14} />
+                      </Link>
+                    )
                   ) : (
                     <div style={{ display: "flex", gap: "0.45rem" }}>
                       <Link

@@ -7,6 +7,7 @@ const getAllTracks = async (req, res) => {
             SELECT
                 lt.id,
                 lt.name,
+                lt.name AS title,
                 lt.description,
                 lt.difficulty,
                 lt.image_url,
