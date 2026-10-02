@@ -90,11 +90,16 @@ const Learning: React.FC = () => {
       }
 
       if (coursesRes.status === "fulfilled") {
-        const list = Array.isArray(coursesRes.value.data)
-          ? coursesRes.value.data
-          : Array.isArray(coursesRes.value.courses)
-            ? coursesRes.value.courses
-            : [];
+        const val = coursesRes.value as
+          | { data?: Course[]; courses?: Course[] }
+          | Course[];
+        const list: Course[] = Array.isArray(val)
+          ? val
+          : Array.isArray(val?.data)
+            ? val.data
+            : Array.isArray(val?.courses)
+              ? val.courses
+              : [];
         setCourses(list);
       } else {
         throw new Error(

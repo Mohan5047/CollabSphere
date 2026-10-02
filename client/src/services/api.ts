@@ -46,8 +46,17 @@ export const getErrorMessage = (error: unknown): string => {
 // CONFIGURATION & STORAGE KEYS
 // ============================================================================
 
-export const API_BASE_URL: string =
-  import.meta.env.VITE_API_URL;
+const rawApiUrl = (
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_URL ||
+  "http://localhost:5000"
+)
+  .toString()
+  .trim()
+  .replace(/\/api\/?$/, "")
+  .replace(/\/+$/, "");
+
+export const API_BASE_URL: string = rawApiUrl;
 
 export const AUTH_TOKEN_KEY = "token";
 
